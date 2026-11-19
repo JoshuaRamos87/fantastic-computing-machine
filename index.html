@@ -4,9 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" id="themeColorMeta" content="#f7f9fa">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="X Downloader">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Twitter / X Video Downloader Pro</title>
+
+  <!-- PWA Web App Manifest & Icons -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
 
   <!-- Inline SVG Favicon (Zero external requests) -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231DA1F2'/%3E%3Cpath d='M32 14v24m0 0l-9-9m9 9l9-9M18 46h28' stroke='%23fff' stroke-width='5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
@@ -80,6 +86,17 @@
       <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
         <button
           type="button"
+          id="installAppBtn"
+          onclick="promptInstallApp()"
+          class="hidden items-center space-x-1.5 text-xs font-semibold px-3 py-2 rounded-xl bg-xblue text-white hover:bg-xbluehover transition focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+          title="Install as an app on your device"
+        >
+          <i class="fa-solid fa-download text-[11px]" aria-hidden="true"></i>
+          <span>Install</span>
+        </button>
+
+        <button
+          type="button"
           onclick="loadSampleLink()"
           class="hidden sm:inline-flex items-center space-x-1.5 text-xs font-semibold px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-xblue hover:bg-blue-100 dark:hover:bg-blue-900/50 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
           title="Test with a sample video post"
@@ -141,6 +158,12 @@
   <!-- Mobile Navigation Drawer -->
   <nav id="drawerMenu" aria-label="Mobile Navigation" class="hidden sm:hidden bg-white dark:bg-xcard border-b border-gray-200 dark:border-xborder px-4 py-3 text-sm shadow-md">
     <ul class="space-y-1.5">
+      <li id="mobileInstallAppItem" class="hidden">
+        <button type="button" onclick="promptInstallApp()" class="w-full text-left py-2 px-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-xblue hover:bg-blue-100 dark:hover:bg-blue-900/50 font-semibold flex items-center transition">
+          <i class="fa-solid fa-mobile-screen-button w-6 text-xblue" aria-hidden="true"></i>
+          <span>Install App to Home Screen</span>
+        </button>
+      </li>
       <li>
         <button type="button" onclick="resetToInput()" class="w-full text-left py-2 px-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-xblue font-medium flex items-center transition">
           <i class="fa-solid fa-house w-6 text-gray-400" aria-hidden="true"></i>
@@ -997,14 +1020,37 @@
         document.getElementById('settingSavePickerRow').classList.remove('hidden');
       }
 
-      // Check for ?url=... query parameter for bookmarklets & mobile shortcuts
+      // Register PWA Service Worker when served over HTTPS or localhost
+      if (
+        'serviceWorker' in navigator &&
+        (window.location.protocol === 'https:' ||
+          window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1')
+      ) {
+        navigator.serviceWorker.register('./sw.js', { scope: './' }).catch((err) => {
+          console.warn("Service Worker registration skipped:", err);
+        });
+      }
+
+      // Check for ?url=... / ?text=... query parameters (Android Share Target, bookmarklets & shortcuts)
       try {
         const params = new URLSearchParams(window.location.search);
-        const queryUrl = params.get('url') || params.get('tweet') || params.get('id');
-        if (queryUrl && extractTweetDetails(queryUrl)) {
+        const candidates = [
+          params.get('url'),
+          params.get('tweet'),
+          params.get('id'),
+          params.get('text'),
+          params.get('title'),
+        ].filter(Boolean);
+
+        const matchedInput = candidates.find((c) => extractTweetDetails(c)) || candidates.find((c) => isTcoShortLink(c));
+        if (matchedInput) {
           const input = document.getElementById('urlInput');
-          input.value = queryUrl.trim();
+          input.value = matchedInput.trim();
           handleUrlInputChange(input.value);
+          if (window.history && typeof window.history.replaceState === 'function') {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
           handleFormSubmit(new Event('submit'));
           return;
         }
@@ -1014,6 +1060,50 @@
 
       document.getElementById('urlInput').focus();
     });
+
+    // Progressive Web App (PWA) Install Prompt Handling
+    let deferredInstallPrompt = null;
+
+    function setInstallButtonsVisible(visible) {
+      const headerBtn = document.getElementById('installAppBtn');
+      const mobileItem = document.getElementById('mobileInstallAppItem');
+      if (headerBtn) {
+        headerBtn.classList.toggle('hidden', !visible);
+        headerBtn.classList.toggle('inline-flex', visible);
+      }
+      if (mobileItem) {
+        mobileItem.classList.toggle('hidden', !visible);
+      }
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      setInstallButtonsVisible(true);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+      setInstallButtonsVisible(false);
+      showToast("App installed to your home screen!");
+    });
+
+    async function promptInstallApp() {
+      if (!deferredInstallPrompt) return;
+      setMobileMenuOpen(false);
+      const promptEvent = deferredInstallPrompt;
+      deferredInstallPrompt = null;
+      setInstallButtonsVisible(false);
+      try {
+        await promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        if (choice && choice.outcome !== 'accepted') {
+          showToast("You can install anytime from the browser menu");
+        }
+      } catch (err) {
+        console.warn("Install prompt failed:", err);
+      }
+    }
 
     // Global Escape key: close modals/drawer, ignore fullscreen exit, protect active downloads
     document.addEventListener('keydown', (e) => {
