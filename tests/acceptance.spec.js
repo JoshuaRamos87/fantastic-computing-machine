@@ -315,6 +315,65 @@ test.describe('Media extraction, failover & rendering', () => {
     await expect(appPage.locator('#playerErrorOverlay')).toBeVisible();
     await expect(appPage.locator('#playerErrorText')).toContainText('Preview stream failed to load');
   });
+
+  test('inline video player omits Referer and falls back to Blob preview if direct <video> streaming is blocked', async ({ appPage }) => {
+    const id = '1890000000000000005';
+    const mediaRequestReferers = [];
+    const blobFallbackFetches = [];
+
+    await setupMockNetwork(appPage, {
+      fxHandler: (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(fxSingleVideo(id)),
+        }),
+      mp4Handler: async (route) => {
+        const req = route.request();
+        const headers = req.headers();
+        if (req.resourceType() === 'media') {
+          mediaRequestReferers.push(headers['referer'] || '');
+          // Simulate CDN/browser blocking direct <video> stream while CORS fetch succeeds
+          await route.fulfill({ status: 403, body: 'Forbidden' });
+          return;
+        }
+        if (req.method() === 'GET') {
+          blobFallbackFetches.push({
+            url: req.url(),
+            referer: headers['referer'] || '',
+            origin: headers['origin'] || '',
+          });
+        }
+        await route.fulfill({
+          status: 200,
+          headers: {
+            'Content-Type': 'video/mp4',
+            'Content-Length': String(TINY_MP4.length),
+            'Access-Control-Allow-Origin': headers['origin'] || '*',
+          },
+          body: req.method() === 'HEAD' ? undefined : TINY_MP4,
+        });
+      },
+    });
+    await gotoApp(appPage);
+
+    // Document-level no-referrer meta must be present so <video> and <img> never leak GitHub Pages Referer
+    await expect(appPage.locator('meta[name="referrer"]')).toHaveAttribute('content', 'no-referrer');
+
+    await appPage.fill('#urlInput', id);
+    await appPage.click('#fetchBtn');
+
+    await expect(appPage.locator('#resultSection')).toBeVisible();
+    await expect(appPage.locator('#inlineVideoPlayer')).toHaveAttribute('src', /^blob:/);
+    await expect(appPage.locator('#playerErrorOverlay')).toBeHidden();
+
+    expect(mediaRequestReferers.length).toBeGreaterThan(0);
+    for (const ref of mediaRequestReferers) {
+      expect(ref).toBe('');
+    }
+    expect(blobFallbackFetches.length).toBeGreaterThan(0);
+    expect(blobFallbackFetches[0].referer).toBe('');
+  });
 });
 
 test.describe('Streamed downloads, cancellation & GIF export', () => {

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="referrer" content="no-referrer">
   <meta name="theme-color" id="themeColorMeta" content="#f7f9fa">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -960,6 +961,7 @@
     const STALL_TIMEOUT_MS = 30000;
     const LARGE_FILE_PICKER_THRESHOLD = 80 * 1024 * 1024;
     const MOBILE_MEMORY_WARN_THRESHOLD = 150 * 1024 * 1024;
+    const PREVIEW_BLOB_MAX_BYTES = 25 * 1024 * 1024;
     const MAX_HISTORY_ITEMS = 25;
     // Bypass HTTP disk cache entries created by <video>/<img> (no-cors) and omit Referer on CDN fetches
     const MEDIA_FETCH_OPTIONS = {
@@ -985,6 +987,11 @@
     // Preview error fallback state
     let previewCandidateUrls = [];
     let previewCandidateIndex = 0;
+    let previewBlobUrl = null;
+    let previewBlobController = null;
+    let previewBlobFallbackAttempted = false;
+    let previewAutoPlayOnFallback = false;
+    let previewLoadSessionId = 0;
 
     // GIF export state
     let gifExportController = null;
@@ -1006,7 +1013,7 @@
         }
       });
 
-      // Resilient inline player error handler with automatic variant failover
+      // Resilient inline player error handler with automatic variant failover + Blob stream fallback
       const player = document.getElementById('inlineVideoPlayer');
       player.addEventListener('error', () => {
         if (!player.getAttribute('src')) return;
@@ -1015,6 +1022,20 @@
           const next = previewCandidateUrls[previewCandidateIndex];
           player.src = next.url;
           document.getElementById('previewQualityHint').textContent = `Preview (${next.width}×${next.height})`;
+          return;
+        }
+        if (!previewBlobFallbackAttempted && previewCandidateUrls.length > 0) {
+          previewBlobFallbackAttempted = true;
+          const sessionId = previewLoadSessionId;
+          tryBlobPreviewFallback(player, sessionId).then((loaded) => {
+            if (sessionId !== previewLoadSessionId) return;
+            if (!loaded) {
+              document.getElementById('previewQualityHint').textContent = "Preview unavailable";
+              document.getElementById('playerErrorText').textContent =
+                "Preview stream failed to load (CDN link may have expired or is blocked).";
+              document.getElementById('playerErrorOverlay').classList.remove('hidden');
+            }
+          });
           return;
         }
         document.getElementById('playerErrorText').textContent =
@@ -2405,7 +2426,8 @@
         playerMetaBar.className = "w-full max-w-[260px] mt-2.5 flex items-center justify-between gap-2 text-[11px] text-gray-400";
       }
 
-      // Reset player error overlay
+      // Reset player error overlay and any previous blob preview state
+      resetPreviewBlobFallback();
       document.getElementById('playerErrorOverlay').classList.add('hidden');
       const player = document.getElementById('inlineVideoPlayer');
       player.loop = activeVid.type === 'gif';
@@ -2594,6 +2616,11 @@
         previewBtn.appendChild(previewIcon);
         previewBtn.onclick = () => {
           if (!isSafeHttpsUrl(res.url)) return;
+          resetPreviewBlobFallback();
+          previewCandidateUrls = [res, ...resList.filter(r => r.url !== res.url).reverse()]
+            .filter(r => isSafeHttpsUrl(r.url));
+          previewCandidateIndex = 0;
+          previewAutoPlayOnFallback = true;
           document.getElementById('playerErrorOverlay').classList.add('hidden');
           player.src = res.url;
           player.play().catch(() => {});
@@ -3300,7 +3327,123 @@
       showToast(ok ? "yt-dlp command copied!" : "Copy failed — select and copy manually", !ok);
     }
 
+    function resetPreviewBlobFallback() {
+      previewLoadSessionId++;
+      if (previewBlobController) {
+        previewBlobController.abort();
+        previewBlobController = null;
+      }
+      if (previewBlobUrl) {
+        const oldUrl = previewBlobUrl;
+        previewBlobUrl = null;
+        queueMicrotask(() => URL.revokeObjectURL(oldUrl));
+      }
+      previewBlobFallbackAttempted = false;
+      previewAutoPlayOnFallback = false;
+    }
+
+    async function tryBlobPreviewFallback(player, sessionId) {
+      const candidates = previewCandidateUrls.filter(
+        c => c && isSafeHttpsUrl(c.url) && !/\.m3u8(\?|$)/i.test(c.url)
+      );
+      if (!candidates.length) return false;
+
+      const sortBySmallest = (a, b) => {
+        const aScore = (a.exactBytes || 0) || ((a.width || 0) * (a.height || 0)) || (a.bitrate || 0);
+        const bScore = (b.exactBytes || 0) || ((b.width || 0) * (b.height || 0)) || (b.bitrate || 0);
+        return aScore - bScore;
+      };
+
+      const shouldAutoPlay = previewAutoPlayOnFallback;
+      const ordered = shouldAutoPlay
+        ? [candidates[0], ...candidates.slice(1).sort(sortBySmallest)]
+        : [...candidates].sort(sortBySmallest);
+
+      const controller = new AbortController();
+      previewBlobController = controller;
+      const hintEl = document.getElementById('previewQualityHint');
+
+      for (const candidate of ordered) {
+        if (sessionId !== previewLoadSessionId || controller.signal.aborted) return false;
+        if (candidate.exactBytes > PREVIEW_BLOB_MAX_BYTES) continue;
+
+        try {
+          if (hintEl) hintEl.textContent = "Loading preview...";
+          const response = await fetch(candidate.url, {
+            ...MEDIA_FETCH_OPTIONS,
+            signal: controller.signal
+          });
+          if (!response.ok) continue;
+
+          const contentLength = parseInt(response.headers.get('content-length') || '0', 10);
+          if (contentLength > PREVIEW_BLOB_MAX_BYTES) {
+            try { response.body?.cancel(); } catch (_) {}
+            continue;
+          }
+
+          let blob;
+          if (response.body && typeof response.body.getReader === 'function') {
+            const reader = response.body.getReader();
+            const chunks = [];
+            let received = 0;
+            let exceeded = false;
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              received += value.byteLength;
+              if (received > PREVIEW_BLOB_MAX_BYTES) {
+                exceeded = true;
+                try { await reader.cancel(); } catch (_) {}
+                break;
+              }
+              chunks.push(value);
+            }
+            if (exceeded || received === 0) continue;
+            const rawType = (response.headers.get('content-type') || '').split(';')[0].trim();
+            const mimeType = rawType.startsWith('video/') ? rawType : 'video/mp4';
+            blob = new Blob(chunks, { type: mimeType });
+          } else {
+            const rawBlob = await response.blob();
+            if (!rawBlob || rawBlob.size === 0 || rawBlob.size > PREVIEW_BLOB_MAX_BYTES) continue;
+            blob = rawBlob.type && rawBlob.type.startsWith('video/')
+              ? rawBlob
+              : new Blob([rawBlob], { type: 'video/mp4' });
+          }
+
+          if (sessionId !== previewLoadSessionId || controller.signal.aborted) return false;
+
+          if (previewBlobUrl) {
+            const oldUrl = previewBlobUrl;
+            queueMicrotask(() => URL.revokeObjectURL(oldUrl));
+          }
+          previewBlobUrl = URL.createObjectURL(blob);
+          if (previewBlobController === controller) {
+            previewBlobController = null;
+          }
+          document.getElementById('playerErrorOverlay')?.classList.add('hidden');
+          player.src = previewBlobUrl;
+          if (shouldAutoPlay) {
+            player.play().catch(() => {});
+          }
+          if (hintEl) {
+            hintEl.textContent = candidate.width && candidate.height
+              ? `Preview (${candidate.width}×${candidate.height})`
+              : "Preview stream";
+          }
+          return true;
+        } catch (err) {
+          if (err && err.name === 'AbortError') return false;
+        }
+      }
+
+      if (previewBlobController === controller) {
+        previewBlobController = null;
+      }
+      return false;
+    }
+
     function stopInlineVideo() {
+      resetPreviewBlobFallback();
       const player = document.getElementById('inlineVideoPlayer');
       if (player) {
         player.pause();
