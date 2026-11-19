@@ -1,4 +1,4 @@
-const CACHE_NAME = 'x-downloader-pwa-v1';
+const CACHE_NAME = 'x-downloader-pwa-v2';
 const APP_SHELL_ASSETS = [
   './',
   './index.html',
@@ -33,7 +33,8 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
-  // Never intercept cross-origin API calls or Twitter media CDN downloads
+  // Never intercept blob:/data: URLs or cross-origin API/CDN media downloads
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
   if (url.origin !== self.location.origin) return;
 
   // Navigation requests (including ?url= / ?text= from Android Share Sheet):

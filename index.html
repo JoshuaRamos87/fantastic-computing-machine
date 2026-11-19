@@ -961,6 +961,13 @@
     const LARGE_FILE_PICKER_THRESHOLD = 80 * 1024 * 1024;
     const MOBILE_MEMORY_WARN_THRESHOLD = 150 * 1024 * 1024;
     const MAX_HISTORY_ITEMS = 25;
+    // Bypass HTTP disk cache entries created by <video>/<img> (no-cors) and omit Referer on CDN fetches
+    const MEDIA_FETCH_OPTIONS = {
+      mode: 'cors',
+      credentials: 'omit',
+      cache: 'no-store',
+      referrerPolicy: 'no-referrer'
+    };
 
     let appSettings = { ...DEFAULT_SETTINGS };
     let currentTweetData = null;
@@ -2202,7 +2209,7 @@
       if (!isSafeHttpsUrl(res.url)) return;
 
       try {
-        const response = await fetchWithTimeout(res.url, 5500, signal, { method: 'HEAD' });
+        const response = await fetchWithTimeout(res.url, 5500, signal, { ...MEDIA_FETCH_OPTIONS, method: 'HEAD' });
         if (signal.aborted || !response.ok) return;
 
         const lenHeader = response.headers.get('content-length');
@@ -2842,7 +2849,7 @@
       let succeeded = false;
       try {
         resetStallTimer();
-        const response = await fetch(url, { signal: controller.signal });
+        const response = await fetch(url, { ...MEDIA_FETCH_OPTIONS, signal: controller.signal });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const contentLengthHeader = response.headers.get('content-length');
@@ -2911,7 +2918,7 @@
             await fileWritable.close();
             fileWritable = null;
           } else {
-            const blob = new Blob(chunks, { type: 'video/mp4' });
+            const blob = new Blob(chunks, { type: 'application/octet-stream' });
             chunks.length = 0;
 
             if (blob.size > 0 && res) {
@@ -2935,14 +2942,15 @@
         } else {
           entry.statusText = "Downloading MP4...";
           syncUI();
-          const blob = await response.blob();
+          const rawBlob = await response.blob();
           clearTimeout(stallTimer);
 
           if (fileWritable) {
-            await fileWritable.write(blob);
+            await fileWritable.write(rawBlob);
             await fileWritable.close();
             fileWritable = null;
           } else {
+            const blob = new Blob([rawBlob], { type: 'application/octet-stream' });
             const blobUrl = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = blobUrl;
@@ -3068,9 +3076,9 @@
         const origUrl = upgradeTwitterImageUrl(activeVid.thumb, 'orig') || activeVid.thumb;
         let res = null;
         try {
-          res = await fetch(origUrl);
+          res = await fetch(origUrl, MEDIA_FETCH_OPTIONS);
           if (!res.ok && origUrl !== activeVid.thumb) {
-            res = await fetch(activeVid.thumb);
+            res = await fetch(activeVid.thumb, MEDIA_FETCH_OPTIONS);
           }
         } catch {
           res = null;
@@ -3185,9 +3193,9 @@
 
       if (btnEl) btnEl.disabled = true;
       try {
-        let res = await fetch(targetUrl);
+        let res = await fetch(targetUrl, MEDIA_FETCH_OPTIONS);
         if (!res.ok && targetUrl !== photo.previewUrl && isSafeHttpsUrl(photo.previewUrl)) {
-          res = await fetch(photo.previewUrl);
+          res = await fetch(photo.previewUrl, MEDIA_FETCH_OPTIONS);
         }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -3549,7 +3557,7 @@
       let offscreenVideo = null;
 
       try {
-        const res = await fetch(preferred.url, { signal });
+        const res = await fetch(preferred.url, { ...MEDIA_FETCH_OPTIONS, signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const mp4Blob = await res.blob();
         if (signal.aborted) throw new DOMException('Aborted', 'AbortError');

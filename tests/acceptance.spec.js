@@ -354,6 +354,65 @@ test.describe('Streamed downloads, cancellation & GIF export', () => {
     await expect(appPage.locator('#downloadButtonsList > div').first().locator('i.fa-circle-check')).toBeAttached();
   });
 
+  test('bypasses no-cors <video> HTTP cache and omits Referer so hosted HTTPS downloads never fall back to a new tab', async ({ appPage }) => {
+    const id = '1890000000000000004';
+    const fetchChecks = [];
+
+    await setupMockNetwork(appPage, {
+      fxHandler: (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(fxGifPost(id)),
+        }),
+      mp4Handler: async (route) => {
+        const req = route.request();
+        const headers = req.headers();
+        const hasOrigin = Boolean(headers['origin']);
+
+        if (req.method() === 'GET' && hasOrigin) {
+          fetchChecks.push({
+            referer: headers['referer'] || '',
+            origin: headers['origin'] || '',
+          });
+        }
+
+        // Simulate real CDN behavior: 7-day Cache-Control without Vary: Origin,
+        // and ACAO only returned when Origin header is present (so no-cors <video> cache entry lacks ACAO)
+        const respHeaders = {
+          'Content-Type': 'video/mp4',
+          'Content-Length': String(TINY_MP4.length),
+          'Cache-Control': 'public, max-age=604800',
+        };
+        if (hasOrigin) {
+          respHeaders['Access-Control-Allow-Origin'] = headers['origin'];
+        }
+
+        await route.fulfill({
+          status: 200,
+          headers: respHeaders,
+          body: req.method() === 'HEAD' ? undefined : TINY_MP4,
+        });
+      },
+    });
+    await gotoApp(appPage);
+
+    await appPage.fill('#urlInput', id);
+    await appPage.click('#fetchBtn');
+    await expect(appPage.locator('#resultSection')).toBeVisible();
+
+    // Wait briefly so inline <video> fetches the same single-variant URL in no-cors mode
+    await appPage.waitForTimeout(200);
+
+    const downloadPromise = appPage.waitForEvent('download');
+    await appPage.locator('#downloadButtonsList > div').first().locator('button').first().click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toMatch(/\.mp4$/);
+    expect(fetchChecks.length).toBeGreaterThan(0);
+    expect(fetchChecks[0].referer).toBe('');
+  });
+
   test('protects active downloads against accidental single Escape and allows Cancel', async ({ appPage }) => {
     const id = '1890000000000000001';
     let releaseDownload;
