@@ -1,0 +1,17 @@
+{
+  "name": "x-video-downloader-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright acceptance test suite for the single-file Twitter / X Video Downloader app",
+  "scripts": {
+    "test": "playwright test --grep-invert @live",
+    "test:desktop": "playwright test --project=desktop-chromium --grep-invert @live",
+    "test:mobile": "playwright test --project=mobile-chromium --grep-invert @live",
+    "test:live": "playwright test --grep @live",
+    "test:headed": "playwright test --headed --grep-invert @live",
+    "test:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}
