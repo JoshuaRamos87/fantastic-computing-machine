@@ -32,35 +32,9 @@
     })();
   </script>
 
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif']
-          },
-          colors: {
-            xblue: '#1DA1F2',
-            xbluehover: '#0c85d0',
-            xdark: '#0f1419',
-            xcard: '#16181c',
-            xborder: '#2f3336'
-          }
-        }
-      }
-    };
-  </script>
-
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <!-- Self-Contained Offline Styles (Compiled Tailwind CSS + Local Inter Font + Local Vector Icons) -->
+  <link rel="stylesheet" href="./assets/styles.css">
+  <link rel="stylesheet" href="./assets/icons.css">
 </head>
 <body class="min-h-screen flex flex-col font-sans bg-[#f7f9fa] dark:bg-xdark text-gray-800 dark:text-gray-100 transition-colors duration-200 antialiased">
 
@@ -476,23 +450,143 @@
               </div>
             </div>
 
-            <!-- Preview Caption + Save Thumbnail Button -->
+            <!-- Preview Caption + Trim & Save Thumbnail Buttons -->
             <div class="w-full max-w-[260px] mt-2.5 flex items-center justify-between gap-2 text-[11px] text-gray-400" id="playerMetaBar">
               <span class="flex items-center space-x-1 truncate">
                 <i class="fa-solid fa-circle-play text-xblue" aria-hidden="true"></i>
                 <span id="previewQualityHint">Preview stream</span>
               </span>
 
+              <div class="flex items-center space-x-2 shrink-0">
+                <button
+                  type="button"
+                  id="toggleTrimBtn"
+                  onclick="toggleTrimPanel()"
+                  aria-expanded="false"
+                  aria-controls="trimControlsPanel"
+                  class="hidden text-xblue hover:underline font-medium inline-flex items-center space-x-1 rounded px-1 py-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+                  title="Trim video start and end time before downloading"
+                >
+                  <i class="fa-solid fa-scissors" aria-hidden="true"></i>
+                  <span>Trim</span>
+                </button>
+
+                <button
+                  type="button"
+                  id="downloadThumbBtn"
+                  onclick="downloadActiveThumbnail()"
+                  class="hidden text-xblue hover:underline font-medium inline-flex items-center space-x-1 rounded px-1 py-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+                  title="Download video cover thumbnail image"
+                >
+                  <i class="fa-regular fa-image" aria-hidden="true"></i>
+                  <span>Save Cover</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Quick Trim / Clip Panel -->
+            <div id="trimControlsPanel" class="hidden w-full max-w-[260px] mt-2.5 rounded-xl bg-gray-50 dark:bg-xdark border border-gray-200 dark:border-xborder p-3 space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 flex items-center space-x-1.5">
+                  <i class="fa-solid fa-scissors text-xblue" aria-hidden="true"></i>
+                  <span>Trim Clip</span>
+                </span>
+                <div class="flex items-center space-x-2">
+                  <span id="trimDurationBadge" class="text-[10px] font-mono bg-blue-50 dark:bg-blue-950/60 text-xblue px-1.5 py-0.5 rounded font-semibold">0.0s</span>
+                  <button
+                    type="button"
+                    id="trimResetBtn"
+                    onclick="resetTrimRange()"
+                    class="text-[11px] text-gray-500 dark:text-gray-400 hover:text-xblue font-medium"
+                    title="Reset trim range to full video"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+
+              <!-- Start Handle -->
+              <div class="space-y-1">
+                <div class="flex items-center justify-between text-[11px]">
+                  <label for="trimStartSlider" class="text-gray-600 dark:text-gray-300 font-medium">Start</label>
+                  <div class="flex items-center space-x-1.5">
+                    <span id="trimStartReadout" class="font-mono text-gray-700 dark:text-gray-200">0:00.0</span>
+                    <button
+                      type="button"
+                      onclick="setTrimStartToCurrent()"
+                      class="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-[10px] font-semibold text-gray-700 dark:text-gray-200 transition"
+                      title="Set Start to current video time"
+                    >
+                      Use Current
+                    </button>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  id="trimStartSlider"
+                  min="0"
+                  max="10"
+                  step="0.1"
+                  value="0"
+                  class="w-full accent-xblue cursor-pointer"
+                  aria-label="Trim start time in seconds"
+                />
+              </div>
+
+              <!-- End Handle -->
+              <div class="space-y-1">
+                <div class="flex items-center justify-between text-[11px]">
+                  <label for="trimEndSlider" class="text-gray-600 dark:text-gray-300 font-medium">End</label>
+                  <div class="flex items-center space-x-1.5">
+                    <span id="trimEndReadout" class="font-mono text-gray-700 dark:text-gray-200">0:00.0</span>
+                    <button
+                      type="button"
+                      onclick="setTrimEndToCurrent()"
+                      class="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-[10px] font-semibold text-gray-700 dark:text-gray-200 transition"
+                      title="Set End to current video time"
+                    >
+                      Use Current
+                    </button>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  id="trimEndSlider"
+                  min="0"
+                  max="10"
+                  step="0.1"
+                  value="10"
+                  class="w-full accent-xblue cursor-pointer"
+                  aria-label="Trim end time in seconds"
+                />
+              </div>
+
               <button
                 type="button"
-                id="downloadThumbBtn"
-                onclick="downloadActiveThumbnail()"
-                class="hidden text-xblue hover:underline font-medium inline-flex items-center space-x-1 shrink-0 rounded px-1 py-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
-                title="Download video cover thumbnail image"
+                id="exportTrimBtn"
+                onclick="exportTrimmedVideo()"
+                class="w-full py-2 px-3 rounded-lg bg-xblue hover:bg-xbluehover active:scale-[0.99] text-white text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
               >
-                <i class="fa-regular fa-image" aria-hidden="true"></i>
-                <span>Save Cover</span>
+                <i class="fa-solid fa-scissors text-[11px]" aria-hidden="true"></i>
+                <span id="exportTrimBtnLabel">Save Trimmed Clip</span>
               </button>
+
+              <div id="trimProgressBox" class="hidden bg-white dark:bg-xcard border border-gray-200 dark:border-xborder rounded-lg p-2 space-y-1.5">
+                <div class="flex items-center justify-between text-[11px] text-gray-600 dark:text-gray-300 font-medium">
+                  <span id="trimProgressLabel" class="font-mono truncate">Preparing clip...</span>
+                  <button
+                    type="button"
+                    id="trimCancelBtn"
+                    onclick="cancelTrimExport()"
+                    class="text-red-500 hover:underline font-semibold ml-2 shrink-0"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                  <div id="trimProgressBar" class="h-full bg-xblue rounded-full transition-all duration-150" style="width: 0%"></div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -570,7 +664,7 @@
               >
                 <span class="flex items-center space-x-2">
                   <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
-                  <span>Export Real Animated .GIF</span>
+                  <span id="exportGifBtnLabel">Export Real Animated .GIF</span>
                 </span>
                 <span class="text-[10px] font-mono bg-white/20 px-2 py-0.5 rounded">Client-Side</span>
               </button>
@@ -993,8 +1087,15 @@
     let previewAutoPlayOnFallback = false;
     let previewLoadSessionId = 0;
 
-    // GIF export state
+    // GIF & Trim export state
     let gifExportController = null;
+    let trimExportController = null;
+    const trimState = {
+      open: false,
+      duration: 0,
+      start: 0,
+      end: 0
+    };
 
     /* =========================================================================
      * INITIALIZATION & KEYBOARD SHORTCUTS
@@ -1042,6 +1143,37 @@
           "Preview stream failed to load (CDN link may have expired or is blocked).";
         document.getElementById('playerErrorOverlay').classList.remove('hidden');
       });
+
+      // Sync Trim sliders with real video duration & loop playback inside active trim bounds
+      player.addEventListener('loadedmetadata', () => {
+        if (Number.isFinite(player.duration) && player.duration > 0) {
+          syncTrimDuration(player.duration);
+        }
+      });
+
+      player.addEventListener('timeupdate', () => {
+        if (!trimState.open || !isTrimRangeActive()) return;
+        if (player.currentTime < trimState.start - 0.05) {
+          player.currentTime = trimState.start;
+        } else if (player.currentTime >= trimState.end) {
+          player.currentTime = trimState.start;
+        }
+      });
+
+      const trimStartSlider = document.getElementById('trimStartSlider');
+      const trimEndSlider = document.getElementById('trimEndSlider');
+      if (trimStartSlider) {
+        trimStartSlider.addEventListener('input', () => {
+          const val = parseFloat(trimStartSlider.value) || 0;
+          setTrimBounds(val, trimState.end, 'start');
+        });
+      }
+      if (trimEndSlider) {
+        trimEndSlider.addEventListener('input', () => {
+          const val = parseFloat(trimEndSlider.value) || 0;
+          setTrimBounds(trimState.start, val, 'end');
+        });
+      }
 
       // Show File System Access setting only when supported by the browser
       if (typeof window.showSaveFilePicker === 'function') {
@@ -2413,21 +2545,30 @@
       const actionsColumn = document.getElementById('actionsColumn');
       const playerFrame = document.getElementById('playerFrame');
       const playerMetaBar = document.getElementById('playerMetaBar');
+      const trimControlsPanel = document.getElementById('trimControlsPanel');
+      const toggleTrimBtn = document.getElementById('toggleTrimBtn');
 
       if (isLandscape) {
         playerColumn.className = "w-full md:w-6/12 flex flex-col items-center";
         actionsColumn.className = "w-full md:w-6/12 flex flex-col justify-between space-y-4";
         playerFrame.className = "relative w-full max-w-full rounded-xl overflow-hidden bg-black shadow-md border border-gray-200 dark:border-xborder";
         playerMetaBar.className = "w-full mt-2.5 flex items-center justify-between gap-2 text-[11px] text-gray-400";
+        if (trimControlsPanel) {
+          trimControlsPanel.className = "hidden w-full mt-2.5 rounded-xl bg-gray-50 dark:bg-xdark border border-gray-200 dark:border-xborder p-3 space-y-2.5";
+        }
       } else {
         playerColumn.className = "w-full md:w-5/12 flex flex-col items-center";
         actionsColumn.className = "w-full md:w-7/12 flex flex-col justify-between space-y-4";
         playerFrame.className = "relative w-full max-w-[260px] rounded-xl overflow-hidden bg-black shadow-md border border-gray-200 dark:border-xborder";
         playerMetaBar.className = "w-full max-w-[260px] mt-2.5 flex items-center justify-between gap-2 text-[11px] text-gray-400";
+        if (trimControlsPanel) {
+          trimControlsPanel.className = "hidden w-full max-w-[260px] mt-2.5 rounded-xl bg-gray-50 dark:bg-xdark border border-gray-200 dark:border-xborder p-3 space-y-2.5";
+        }
       }
 
-      // Reset player error overlay and any previous blob preview state
+      // Reset player error overlay and any previous blob preview / trim state
       resetPreviewBlobFallback();
+      resetTrimState(activeVid.duration || 0);
       document.getElementById('playerErrorOverlay').classList.add('hidden');
       const player = document.getElementById('inlineVideoPlayer');
       player.loop = activeVid.type === 'gif';
@@ -2468,6 +2609,7 @@
         mp4FormatsContainer.classList.add('hidden');
         directStreamBox.classList.add('hidden');
         gifExportContainer.classList.add('hidden');
+        if (toggleTrimBtn) toggleTrimBtn.classList.add('hidden');
         hlsContainer.classList.remove('hidden');
 
         previewCandidateUrls = isSafeHttpsUrl(activeVid.hlsUrl)
@@ -2491,6 +2633,7 @@
       hlsContainer.classList.add('hidden');
       mp4FormatsContainer.classList.remove('hidden');
       directStreamBox.classList.remove('hidden');
+      if (toggleTrimBtn) toggleTrimBtn.classList.remove('hidden');
 
       // Build ordered preview fallback list (mid-tier first, then others)
       const previewRes = resList.length >= 3
@@ -2509,12 +2652,8 @@
       document.getElementById('directUrlInput').value = highestRes.url;
       document.getElementById('openRawLink').href = highestRes.url;
 
-      // Real .GIF export visibility (for GIFs or short clips <= 15s)
-      if (activeVid.type === 'gif' || (activeVid.duration > 0 && activeVid.duration <= 15)) {
-        gifExportContainer.classList.remove('hidden');
-      } else {
-        gifExportContainer.classList.add('hidden');
-      }
+      // Real .GIF export visibility (for GIFs, short clips <= 15s, or trimmed clips <= 15s)
+      updateGifExportAvailability();
 
       // Populate Quality Buttons (Sorted Highest to Lowest)
       const btnContainer = document.getElementById('downloadButtonsList');
@@ -3444,6 +3583,7 @@
 
     function stopInlineVideo() {
       resetPreviewBlobFallback();
+      cancelTrimExport();
       const player = document.getElementById('inlineVideoPlayer');
       if (player) {
         player.pause();
@@ -3452,6 +3592,455 @@
         player.load();
       }
       document.getElementById('playerErrorOverlay')?.classList.add('hidden');
+      document.getElementById('trimControlsPanel')?.classList.add('hidden');
+      const toggleBtn = document.getElementById('toggleTrimBtn');
+      if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+      trimState.open = false;
+    }
+
+    /* =========================================================================
+     * QUICK TRIM / CLIP ENGINE (START/END SLIDERS + CLIENT-SIDE CLIP EXPORTER)
+     * ========================================================================= */
+    function formatTrimTime(sec) {
+      const safe = Math.max(0, Number(sec) || 0);
+      const mins = Math.floor(safe / 60);
+      const rem = (safe % 60).toFixed(1).padStart(4, '0');
+      return `${mins}:${rem}`;
+    }
+
+    function isTrimRangeActive() {
+      if (!(trimState.duration > 0)) return false;
+      return trimState.start > 0.05 || (trimState.duration - trimState.end) > 0.05;
+    }
+
+    function resetTrimState(durationSeconds = 0) {
+      cancelTrimExport();
+      const safeDur = Math.max(0, Number(durationSeconds) || 0);
+      trimState.open = false;
+      trimState.duration = safeDur;
+      trimState.start = 0;
+      trimState.end = safeDur;
+
+      const panel = document.getElementById('trimControlsPanel');
+      const toggleBtn = document.getElementById('toggleTrimBtn');
+      if (panel) panel.classList.add('hidden');
+      if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+      renderTrimUi();
+    }
+
+    function syncTrimDuration(realDuration) {
+      if (!Number.isFinite(realDuration) || realDuration <= 0) return;
+      const wasFullRange = !isTrimRangeActive() || trimState.duration <= 0;
+      trimState.duration = realDuration;
+      if (wasFullRange) {
+        trimState.start = 0;
+        trimState.end = realDuration;
+      } else {
+        trimState.start = Math.max(0, Math.min(trimState.start, Math.max(0, realDuration - 0.2)));
+        trimState.end = Math.max(trimState.start + 0.2, Math.min(trimState.end, realDuration));
+      }
+      renderTrimUi();
+      updateGifExportAvailability();
+    }
+
+    function toggleTrimPanel() {
+      const panel = document.getElementById('trimControlsPanel');
+      const toggleBtn = document.getElementById('toggleTrimBtn');
+      if (!panel) return;
+
+      const player = document.getElementById('inlineVideoPlayer');
+      if (player && Number.isFinite(player.duration) && player.duration > 0) {
+        syncTrimDuration(player.duration);
+      }
+
+      trimState.open = !trimState.open;
+      panel.classList.toggle('hidden', !trimState.open);
+      if (toggleBtn) toggleBtn.setAttribute('aria-expanded', String(trimState.open));
+      renderTrimUi();
+      updateGifExportAvailability();
+    }
+
+    function setTrimBounds(newStart, newEnd, changedHandle = null) {
+      const dur = trimState.duration > 0 ? trimState.duration : Math.max(1, Number(newEnd) || 1);
+      const minGap = Math.min(0.2, dur);
+      let start = Math.max(0, Math.min(Number(newStart) || 0, dur));
+      let end = Math.max(0, Math.min(Number(newEnd) || dur, dur));
+
+      if (changedHandle === 'start' && start > end - minGap) {
+        start = Math.max(0, end - minGap);
+      } else if (changedHandle === 'end' && end < start + minGap) {
+        end = Math.min(dur, start + minGap);
+      } else if (end < start + minGap) {
+        end = Math.min(dur, start + minGap);
+      }
+
+      trimState.start = Math.round(start * 10) / 10;
+      trimState.end = Math.round(end * 10) / 10;
+      renderTrimUi();
+      updateGifExportAvailability();
+
+      const player = document.getElementById('inlineVideoPlayer');
+      if (player && player.readyState >= 1 && changedHandle) {
+        const target = changedHandle === 'start' ? trimState.start : trimState.end;
+        try {
+          player.currentTime = Math.max(0, Math.min(target, player.duration || target));
+        } catch (_) {}
+      }
+    }
+
+    function setTrimStartToCurrent() {
+      const player = document.getElementById('inlineVideoPlayer');
+      if (!player) return;
+      setTrimBounds(player.currentTime || 0, trimState.end, 'start');
+    }
+
+    function setTrimEndToCurrent() {
+      const player = document.getElementById('inlineVideoPlayer');
+      if (!player) return;
+      setTrimBounds(trimState.start, player.currentTime || trimState.duration, 'end');
+    }
+
+    function resetTrimRange() {
+      trimState.start = 0;
+      trimState.end = trimState.duration;
+      renderTrimUi();
+      updateGifExportAvailability();
+    }
+
+    function renderTrimUi() {
+      const startSlider = document.getElementById('trimStartSlider');
+      const endSlider = document.getElementById('trimEndSlider');
+      const startReadout = document.getElementById('trimStartReadout');
+      const endReadout = document.getElementById('trimEndReadout');
+      const durBadge = document.getElementById('trimDurationBadge');
+      const btnLabel = document.getElementById('exportTrimBtnLabel');
+
+      const maxDur = trimState.duration > 0 ? Math.round(trimState.duration * 10) / 10 : 10;
+      const start = Math.max(0, Math.min(trimState.start, maxDur));
+      const end = Math.max(start, Math.min(trimState.end || maxDur, maxDur));
+      const clipLen = Math.max(0, end - start);
+
+      if (startSlider) {
+        startSlider.max = String(maxDur);
+        startSlider.value = String(start);
+      }
+      if (endSlider) {
+        endSlider.max = String(maxDur);
+        endSlider.value = String(end);
+      }
+      if (startReadout) startReadout.textContent = formatTrimTime(start);
+      if (endReadout) endReadout.textContent = formatTrimTime(end);
+      if (durBadge) durBadge.textContent = `${clipLen.toFixed(1)}s`;
+      if (btnLabel) {
+        btnLabel.textContent = isTrimRangeActive()
+          ? `Save Trimmed Clip (${clipLen.toFixed(1)}s)`
+          : "Save Trimmed Clip";
+      }
+    }
+
+    function formatTrimFilenameSec(sec) {
+      const safe = Math.max(0, Number(sec) || 0);
+      return `${safe.toFixed(1).replace(/\.0$/, '').replace('.', '_')}s`;
+    }
+
+    function updateGifExportAvailability() {
+      const gifExportContainer = document.getElementById('gifExportContainer');
+      const gifBtnLabel = document.getElementById('exportGifBtnLabel');
+      const activeVid = currentTweetData?.videos?.[activeVideoIndex];
+      if (!gifExportContainer || !activeVid || activeVid.isHlsOnly || !activeVid.resolutions?.length) {
+        if (gifExportContainer) gifExportContainer.classList.add('hidden');
+        return;
+      }
+
+      const trimmed = isTrimRangeActive();
+      const selectedLen = trimmed
+        ? Math.max(0, trimState.end - trimState.start)
+        : (activeVid.duration || trimState.duration || 0);
+
+      const canExportGif = activeVid.type === 'gif' || (selectedLen > 0 && selectedLen <= 15);
+      gifExportContainer.classList.toggle('hidden', !canExportGif);
+
+      if (gifBtnLabel) {
+        gifBtnLabel.textContent = trimmed && selectedLen <= 15
+          ? `Export Trimmed .GIF (${selectedLen.toFixed(1)}s)`
+          : "Export Real Animated .GIF";
+      }
+    }
+
+    function pickSupportedRecorderMimeType() {
+      if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') {
+        return { mimeType: '', ext: 'webm' };
+      }
+      const candidates = [
+        { mimeType: 'video/mp4;codecs=avc1,mp4a.40.2', ext: 'mp4' },
+        { mimeType: 'video/mp4', ext: 'mp4' },
+        { mimeType: 'video/webm;codecs=vp9,opus', ext: 'webm' },
+        { mimeType: 'video/webm;codecs=vp8,opus', ext: 'webm' },
+        { mimeType: 'video/webm', ext: 'webm' }
+      ];
+      for (const c of candidates) {
+        try {
+          if (MediaRecorder.isTypeSupported(c.mimeType)) return c;
+        } catch (_) {}
+      }
+      return { mimeType: '', ext: 'webm' };
+    }
+
+    function cancelTrimExport() {
+      if (trimExportController) {
+        trimExportController.abort();
+      }
+    }
+
+    async function exportTrimmedVideo() {
+      const activeVid = currentTweetData?.videos?.[activeVideoIndex];
+      if (!activeVid || activeVid.isHlsOnly || !activeVid.resolutions?.length) {
+        showToast("No MP4 source available to trim", true);
+        return;
+      }
+      if (trimExportController) {
+        showToast("Trim export already in progress");
+        return;
+      }
+      if (typeof MediaRecorder === 'undefined') {
+        showToast("Your browser does not support client-side video trimming", true);
+        return;
+      }
+
+      const btn = document.getElementById('exportTrimBtn');
+      const box = document.getElementById('trimProgressBox');
+      const label = document.getElementById('trimProgressLabel');
+      const bar = document.getElementById('trimProgressBar');
+
+      trimExportController = new AbortController();
+      const { signal } = trimExportController;
+
+      btn.disabled = true;
+      btn.classList.add('opacity-70', 'cursor-wait');
+      box.classList.remove('hidden');
+      bar.style.width = "6%";
+      label.textContent = "Fetching video for trimming...";
+
+      // Use highest resolution for crisp trimmed clips
+      const highestRes = activeVid.resolutions[activeVid.resolutions.length - 1];
+      let videoBlobUrl = "";
+      let offscreenVideo = null;
+      let audioCtx = null;
+      let recorder = null;
+      let rafId = 0;
+
+      try {
+        const res = await fetch(highestRes.url, { ...MEDIA_FETCH_OPTIONS, signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const mp4Blob = await res.blob();
+        if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+
+        videoBlobUrl = URL.createObjectURL(mp4Blob);
+        offscreenVideo = document.createElement('video');
+        offscreenVideo.playsInline = true;
+        offscreenVideo.preload = 'auto';
+        offscreenVideo.src = videoBlobUrl;
+
+        await new Promise((resolve, reject) => {
+          const onAbort = () => reject(new DOMException('Aborted', 'AbortError'));
+          signal.addEventListener('abort', onAbort, { once: true });
+          offscreenVideo.onloadeddata = () => {
+            signal.removeEventListener('abort', onAbort);
+            resolve();
+          };
+          offscreenVideo.onerror = () => {
+            signal.removeEventListener('abort', onAbort);
+            reject(new Error("Video decode error"));
+          };
+        });
+
+        const totalDur = Number.isFinite(offscreenVideo.duration) && offscreenVideo.duration > 0
+          ? offscreenVideo.duration
+          : (trimState.duration || activeVid.duration || 5);
+        const startSec = Math.max(0, Math.min(trimState.start, Math.max(0, totalDur - 0.1)));
+        const endSec = Math.max(startSec + 0.1, Math.min(trimState.end > 0 ? trimState.end : totalDur, totalDur));
+        const clipDuration = endSec - startSec;
+
+        // Seek to exact start point before recording
+        await new Promise((resolve) => {
+          let done = false;
+          const finish = () => {
+            if (!done) {
+              done = true;
+              resolve();
+            }
+          };
+          const t = setTimeout(finish, 1500);
+          offscreenVideo.onseeked = () => {
+            clearTimeout(t);
+            finish();
+          };
+          offscreenVideo.currentTime = startSec;
+        });
+        if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+
+        // Build MediaStream (prefer captureStream, fallback to canvas capture)
+        let stream = null;
+        if (typeof offscreenVideo.captureStream === 'function') {
+          stream = offscreenVideo.captureStream();
+        } else if (typeof offscreenVideo.mozCaptureStream === 'function') {
+          stream = offscreenVideo.mozCaptureStream();
+        }
+
+        // Route audio silently through AudioContext when possible so trimming doesn't play aloud
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx && stream) {
+            audioCtx = new AudioCtx();
+            const srcNode = audioCtx.createMediaElementSource(offscreenVideo);
+            const destNode = audioCtx.createMediaStreamDestination();
+            srcNode.connect(destNode);
+            const videoTracks = stream.getVideoTracks();
+            const audioTracks = destNode.stream.getAudioTracks();
+            stream = new MediaStream([...videoTracks, ...audioTracks]);
+          } else {
+            offscreenVideo.muted = true;
+          }
+        } catch (_) {
+          offscreenVideo.muted = true;
+        }
+
+        if (!stream || stream.getTracks().length === 0) {
+          const canvas = document.createElement('canvas');
+          canvas.width = offscreenVideo.videoWidth || highestRes.width || 640;
+          canvas.height = offscreenVideo.videoHeight || highestRes.height || 360;
+          const ctx = canvas.getContext('2d');
+          stream = canvas.captureStream(30);
+          const drawLoop = () => {
+            if (signal.aborted || !offscreenVideo || offscreenVideo.paused || offscreenVideo.ended) return;
+            ctx.drawImage(offscreenVideo, 0, 0, canvas.width, canvas.height);
+            rafId = requestAnimationFrame(drawLoop);
+          };
+          offscreenVideo.addEventListener('play', () => {
+            rafId = requestAnimationFrame(drawLoop);
+          }, { once: true });
+        }
+
+        const { mimeType, ext } = pickSupportedRecorderMimeType();
+        const chunks = [];
+        recorder = mimeType
+          ? new MediaRecorder(stream, { mimeType })
+          : new MediaRecorder(stream);
+
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) chunks.push(e.data);
+        };
+
+        const stoppedPromise = new Promise((resolve, reject) => {
+          recorder.onstop = () => resolve();
+          recorder.onerror = (e) => reject(e.error || new Error("Recorder error"));
+        });
+
+        label.textContent = `Recording clip 0.0s / ${clipDuration.toFixed(1)}s...`;
+        bar.style.width = "15%";
+        recorder.start(200);
+
+        await offscreenVideo.play();
+
+        await new Promise((resolve, reject) => {
+          let finished = false;
+          const cleanup = () => {
+            clearInterval(pollTimer);
+            clearTimeout(safetyTimer);
+            signal.removeEventListener('abort', onAbort);
+            offscreenVideo.removeEventListener('ended', onEnded);
+          };
+          const finish = () => {
+            if (finished) return;
+            finished = true;
+            cleanup();
+            resolve();
+          };
+          const onAbort = () => {
+            if (finished) return;
+            finished = true;
+            cleanup();
+            reject(new DOMException('Aborted', 'AbortError'));
+          };
+          const onEnded = () => finish();
+
+          signal.addEventListener('abort', onAbort, { once: true });
+          offscreenVideo.addEventListener('ended', onEnded, { once: true });
+
+          const pollTimer = setInterval(() => {
+            const elapsed = Math.max(0, (offscreenVideo.currentTime || startSec) - startSec);
+            const pct = Math.min(95, Math.round(15 + (elapsed / clipDuration) * 80));
+            bar.style.width = `${pct}%`;
+            label.textContent = `Recording clip ${Math.min(elapsed, clipDuration).toFixed(1)}s / ${clipDuration.toFixed(1)}s...`;
+            if ((offscreenVideo.currentTime || 0) >= endSec - 0.03) {
+              finish();
+            }
+          }, 80);
+
+          const safetyTimer = setTimeout(finish, Math.max(4000, Math.ceil(clipDuration * 1000) + 4000));
+        });
+
+        offscreenVideo.pause();
+        if (recorder.state !== 'inactive') {
+          recorder.stop();
+        }
+        await stoppedPromise;
+        if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+        if (chunks.length === 0) throw new Error("No video data captured");
+
+        const outBlob = new Blob(chunks, { type: 'application/octet-stream' });
+        const trimTag = `${highestRes.width}x${highestRes.height}_trim_${formatTrimFilenameSec(startSec)}-${formatTrimFilenameSec(endSec)}`;
+        const filename = buildMediaFilename({
+          handle: currentTweetData.authorHandle,
+          id: currentTweetData.id,
+          index: activeVideoIndex,
+          totalCount: currentTweetData.videos.length,
+          resLabel: trimTag,
+          ext
+        });
+
+        const outUrl = URL.createObjectURL(outBlob);
+        const a = document.createElement('a');
+        a.href = outUrl;
+        a.download = filename;
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(outUrl), 60000);
+
+        bar.style.width = "100%";
+        label.textContent = "Trimmed clip saved!";
+        showToast(`Saved ${filename}`);
+      } catch (err) {
+        if (err && err.name === 'AbortError') {
+          showToast("Trim export cancelled", true);
+        } else {
+          console.warn("Trim export failed:", err);
+          showToast("Could not trim clip in this browser — try full MP4 download", true);
+        }
+      } finally {
+        if (rafId) cancelAnimationFrame(rafId);
+        if (recorder && recorder.state !== 'inactive') {
+          try { recorder.stop(); } catch (_) {}
+        }
+        if (audioCtx) {
+          try { audioCtx.close(); } catch (_) {}
+        }
+        if (offscreenVideo) {
+          offscreenVideo.pause();
+          offscreenVideo.removeAttribute('src');
+          offscreenVideo.load();
+        }
+        if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl);
+        trimExportController = null;
+        btn.disabled = false;
+        btn.classList.remove('opacity-70', 'cursor-wait');
+        setTimeout(() => {
+          box.classList.add('hidden');
+          bar.style.width = "0%";
+        }, 700);
+      }
     }
 
     /* =========================================================================
@@ -3736,15 +4325,21 @@
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
         const fps = 10;
-        const duration = Math.min(15, Number.isFinite(offscreenVideo.duration) && offscreenVideo.duration > 0
+        const rawDuration = Number.isFinite(offscreenVideo.duration) && offscreenVideo.duration > 0
           ? offscreenVideo.duration
-          : (activeVid.duration || 4));
+          : (activeVid.duration || 4);
+        const hasTrim = isTrimRangeActive();
+        const clipStart = hasTrim ? Math.max(0, Math.min(trimState.start, Math.max(0, rawDuration - 0.1))) : 0;
+        const clipEnd = hasTrim
+          ? Math.max(clipStart + 0.1, Math.min(trimState.end, rawDuration))
+          : rawDuration;
+        const duration = Math.min(15, Math.max(0.2, clipEnd - clipStart));
         const totalFrames = Math.max(2, Math.min(150, Math.floor(duration * fps)));
         const frames = [];
 
         for (let i = 0; i < totalFrames; i++) {
           if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
-          const seekTime = Math.min(duration - 0.02, i / fps);
+          const seekTime = Math.min(clipStart + duration - 0.02, clipStart + (i / fps));
 
           await new Promise((resolve) => {
             let done = false;
@@ -3786,12 +4381,15 @@
 
         const gifBlob = new Blob([gifBytes], { type: 'image/gif' });
         const gifUrl = URL.createObjectURL(gifBlob);
+        const gifResLabel = hasTrim
+          ? `${targetW}x${targetH}_trim_${formatTrimFilenameSec(clipStart)}-${formatTrimFilenameSec(clipStart + duration)}`
+          : `${targetW}x${targetH}`;
         const filename = buildMediaFilename({
           handle: currentTweetData.authorHandle,
           id: currentTweetData.id,
           index: activeVideoIndex,
           totalCount: currentTweetData.videos.length,
-          resLabel: `${targetW}x${targetH}`,
+          resLabel: gifResLabel,
           ext: 'gif'
         });
 

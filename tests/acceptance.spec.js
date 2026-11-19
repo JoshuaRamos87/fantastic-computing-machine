@@ -572,6 +572,61 @@ test.describe('Streamed downloads, cancellation & GIF export', () => {
     expect(gifBytes.subarray(0, 6).toString('ascii')).toBe('GIF89a');
     expect(gifBytes[gifBytes.length - 1]).toBe(0x3b);
   });
+
+  test('trims a video range to export a trimmed clip and trimmed animated GIF', async ({ appPage }) => {
+    const id = '1890000000000000006';
+    await setupMockNetwork(appPage, {
+      fxHandler: (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(fxLandscapeVideo(id)),
+        }),
+    });
+    await gotoApp(appPage);
+
+    await appPage.fill('#urlInput', id);
+    await appPage.click('#fetchBtn');
+    await expect(appPage.locator('#resultSection')).toBeVisible();
+
+    // Open Quick Trim panel
+    await expect(appPage.locator('#toggleTrimBtn')).toBeVisible();
+    await expect(appPage.locator('#trimControlsPanel')).toBeHidden();
+    await appPage.click('#toggleTrimBtn');
+    await expect(appPage.locator('#trimControlsPanel')).toBeVisible();
+
+    // Set a short 0.5s trim window via sliders
+    await appPage.evaluate(() => {
+      syncTrimDuration(2.0);
+      setTrimBounds(0.2, 0.7, 'end');
+    });
+
+    await expect(appPage.locator('#trimStartReadout')).toHaveText('0:00.2');
+    await expect(appPage.locator('#trimEndReadout')).toHaveText('0:00.7');
+    await expect(appPage.locator('#trimDurationBadge')).toHaveText('0.5s');
+    await expect(appPage.locator('#gifExportContainer')).toBeVisible();
+    await expect(appPage.locator('#exportGifBtnLabel')).toContainText('Export Trimmed .GIF (0.5s)');
+
+    // Export trimmed GIF
+    const gifDownloadPromise = appPage.waitForEvent('download');
+    await appPage.click('#exportGifBtn');
+    const gifDownload = await gifDownloadPromise;
+    expect(gifDownload.suggestedFilename()).toMatch(/_trim_0_2s-0_7s\.gif$/);
+    const gifBytes = fs.readFileSync(await gifDownload.path());
+    expect(gifBytes.subarray(0, 6).toString('ascii')).toBe('GIF89a');
+
+    // Export trimmed video clip via MediaRecorder
+    const clipDownloadPromise = appPage.waitForEvent('download');
+    await appPage.click('#exportTrimBtn');
+    const clipDownload = await clipDownloadPromise;
+    expect(clipDownload.suggestedFilename()).toMatch(/_trim_0_2s-0_7s\.(mp4|webm)$/);
+    const clipStat = fs.statSync(await clipDownload.path());
+    expect(clipStat.size).toBeGreaterThan(0);
+
+    // Reset restores full range
+    await appPage.click('#trimResetBtn');
+    await expect(appPage.locator('#trimStartReadout')).toHaveText('0:00.0');
+  });
 });
 
 test.describe('Theme, modals & history persistence', () => {

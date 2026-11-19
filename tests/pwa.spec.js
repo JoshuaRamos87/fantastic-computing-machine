@@ -95,4 +95,45 @@ test.describe('PWA installability, manifest, service worker & share target', () 
     expect(called).toBe(true);
     await expect(installBtn).toBeHidden();
   });
+
+  test('loads self-contained offline CSS, vector icons, and Inter font with zero external CDN requests', async ({ appPage, request }) => {
+    const externalRequests = [];
+    appPage.on('request', (req) => {
+      const url = req.url();
+      if (/tailwindcss\.com|fonts\.googleapis\.com|fonts\.gstatic\.com|cdnjs\.cloudflare\.com/i.test(url)) {
+        externalRequests.push(url);
+      }
+    });
+
+    await setupMockNetwork(appPage, { includeCdnStubs: false });
+    await gotoApp(appPage);
+
+    expect(externalRequests).toEqual([]);
+
+    for (const assetPath of [
+      './assets/styles.css',
+      './assets/icons.css',
+      './assets/fonts/inter-latin-wght-normal.woff2',
+    ]) {
+      const assetUrl = new URL(assetPath, appPage.url()).toString();
+      const res = await request.get(assetUrl);
+      expect(res.status(), `Offline asset ${assetPath} should return 200`).toBe(200);
+    }
+
+    // Verify compiled Tailwind styles and local vector icons actually apply without any CDN
+    const styleCheck = await appPage.evaluate(() => {
+      const bodyBg = getComputedStyle(document.body).backgroundColor;
+      const brandIcon = document.querySelector('i.fa-brands.fa-x-twitter');
+      const iconStyle = brandIcon ? getComputedStyle(brandIcon) : null;
+      return {
+        bodyBg,
+        iconDisplay: iconStyle?.display || '',
+        iconMask: iconStyle?.maskImage || iconStyle?.webkitMaskImage || '',
+      };
+    });
+
+    expect(styleCheck.bodyBg).not.toBe('rgba(0, 0, 0, 0)');
+    expect(['inline-block', 'block']).toContain(styleCheck.iconDisplay);
+    expect(styleCheck.iconMask).toContain('data:image/svg+xml');
+  });
 });

@@ -1,8 +1,11 @@
-const CACHE_NAME = 'x-downloader-pwa-v3';
+const CACHE_NAME = 'x-downloader-pwa-v4';
 const APP_SHELL_ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
+  './assets/styles.css',
+  './assets/icons.css',
+  './assets/fonts/inter-latin-wght-normal.woff2',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',
