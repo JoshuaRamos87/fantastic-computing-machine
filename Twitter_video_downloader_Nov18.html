@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Twitter / X Video Downloader Pro</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif']
+          },
+          colors: {
+            xblue: '#1DA1F2',
+            xbluehover: '#0c85d0',
+            xdark: '#0f1419',
+            xcard: '#16181c',
+            xborder: '#2f3336'
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="min-h-screen flex flex-col font-sans bg-[#f7f9fa] dark:bg-xdark text-gray-800 dark:text-gray-100 transition-colors duration-200 antialiased">
+
+  <!-- Sticky Header -->
+  <header class="bg-white/90 dark:bg-xcard/90 backdrop-blur-md border-b border-gray-200 dark:border-xborder py-3 px-4 sm:px-6 sticky top-0 z-40 transition-colors">
+    <div class="max-w-3xl mx-auto flex items-center justify-between gap-2">
+      <!-- Brand Button (Semantic & Keyboard Accessible) -->
+      <button
+        type="button"
+        onclick="resetToInput()"
+        class="flex items-center space-x-2.5 text-left select-none group rounded-xl p-1 -ml-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+        aria-label="X Video Downloader Home"
+      >
+        <div class="w-9 h-9 rounded-xl bg-black dark:bg-white text-white dark:text-black flex items-center justify-center shadow-sm group-hover:scale-105 transition">
+          <i class="fa-brands fa-x-twitter text-lg" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight leading-none text-gray-900 dark:text-white">X Video Downloader</h1>
+          <span class="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Direct MP4 &amp; HD Extractor</span>
+        </div>
+      </button>
+
+      <!-- Header Actions -->
+      <div class="flex items-center space-x-2">
+        <button
+          type="button"
+          onclick="loadSampleLink()"
+          class="hidden sm:inline-flex items-center space-x-1.5 text-xs font-semibold px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-xblue hover:bg-blue-100 dark:hover:bg-blue-900/50 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+          title="Test with a sample video post"
+        >
+          <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+          <span>Sample Post</span>
+        </button>
+
+        <!-- Dark Mode Toggle -->
+        <button
+          type="button"
+          id="themeToggleBtn"
+          onclick="toggleTheme()"
+          class="p-2.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+          aria-label="Toggle Dark Mode"
+          title="Toggle Dark / Light Mode"
+        >
+          <i id="themeIcon" class="fa-solid fa-moon text-base" aria-hidden="true"></i>
+        </button>
+
+        <!-- Mobile Menu Toggle -->
+        <button
+          type="button"
+          id="menuBtn"
+          onclick="toggleMobileMenu()"
+          class="p-2.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition sm:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+          aria-label="Toggle Navigation Menu"
+          aria-expanded="false"
+          aria-controls="drawerMenu"
+        >
+          <i id="menuIcon" class="fa-solid fa-bars text-base" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Navigation Drawer -->
+  <nav id="drawerMenu" aria-label="Mobile Navigation" class="hidden sm:hidden bg-white dark:bg-xcard border-b border-gray-200 dark:border-xborder px-4 py-3 text-sm shadow-md">
+    <ul class="space-y-1.5">
+      <li>
+        <button type="button" onclick="resetToInput()" class="w-full text-left py-2 px-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-xblue font-medium flex items-center transition">
+          <i class="fa-solid fa-house w-6 text-gray-400" aria-hidden="true"></i>
+          <span>Home</span>
+        </button>
+      </li>
+      <li>
+        <button type="button" onclick="loadSampleLink()" class="w-full text-left py-2 px-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-xblue font-medium flex items-center transition">
+          <i class="fa-solid fa-wand-magic-sparkles w-6 text-xblue" aria-hidden="true"></i>
+          <span>Try Sample Post</span>
+        </button>
+      </li>
+      <li>
+        <a href="https://x.com" target="_blank" rel="noopener noreferrer" class="w-full py-2 px-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-xblue font-medium flex items-center transition">
+          <i class="fa-brands fa-x-twitter w-6 text-gray-400" aria-hidden="true"></i>
+          <span>Open X / Twitter</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Accessible Live Toast Notification -->
+  <div
+    id="toast"
+    role="status"
+    aria-live="polite"
+    class="fixed top-20 left-1/2 -translate-x-1/2 z-50 hidden bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2.5 rounded-full text-xs sm:text-sm font-medium shadow-xl flex items-center space-x-2.5 transition-all duration-300 pointer-events-none border border-gray-700 dark:border-gray-200 max-w-[92vw]"
+  >
+    <i class="fa-solid fa-circle-check text-green-400 dark:text-green-600 shrink-0" id="toastIcon" aria-hidden="true"></i>
+    <span id="toastMsg" class="truncate">Action completed successfully</span>
+  </div>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center space-y-6">
+
+    <!-- SECTION 1: URL Input Card -->
+    <section id="inputSection" class="bg-white dark:bg-xcard rounded-2xl shadow-sm border border-gray-200 dark:border-xborder p-5 sm:p-8 transition-colors">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-xblue mb-3 shadow-inner">
+          <i class="fa-solid fa-cloud-arrow-down text-2xl" aria-hidden="true"></i>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Download Twitter / X Video</h2>
+        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Paste any public X link, mobile share text, quoted post, or Tweet ID
+        </p>
+      </div>
+
+      <form id="downloadForm" onsubmit="handleFormSubmit(event)" class="space-y-3.5" novalidate>
+        <div class="relative flex items-center">
+          <div class="absolute left-4 text-gray-400 pointer-events-none flex items-center">
+            <i id="inputStatusIcon" class="fa-solid fa-link text-sm transition-colors" aria-hidden="true"></i>
+          </div>
+
+          <!-- Using type="text" with inputmode="url" accepts messy mobile share text & raw Tweet IDs -->
+          <input
+            type="text"
+            inputmode="url"
+            id="urlInput"
+            placeholder="Paste X / Twitter link or Tweet ID..."
+            required
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="X or Twitter Post Link or ID"
+            oninput="handleUrlInputChange(this.value)"
+            onpaste="handleNativePaste(event)"
+            class="w-full pl-10 pr-28 py-3.5 bg-gray-50 dark:bg-xdark border border-gray-300 dark:border-xborder rounded-xl focus:ring-2 focus:ring-xblue focus:border-xblue focus:bg-white dark:focus:bg-xdark outline-none text-sm text-gray-900 dark:text-white transition"
+          />
+
+          <div class="absolute right-2 flex items-center space-x-1">
+            <button
+              type="button"
+              id="clearInputBtn"
+              onclick="clearUrlInput()"
+              class="hidden p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+              aria-label="Clear link input"
+              title="Clear input"
+            >
+              <i class="fa-solid fa-circle-xmark text-sm" aria-hidden="true"></i>
+            </button>
+
+            <button
+              type="button"
+              onclick="pasteFromClipboard()"
+              class="px-3 py-2 bg-gray-200/80 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-lg transition flex items-center space-x-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+            >
+              <i class="fa-regular fa-paste" aria-hidden="true"></i>
+              <span>Paste</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Real-Time Validation Helper -->
+        <div id="validationFeedback" class="hidden text-xs px-1 flex items-center space-x-1.5" aria-live="polite"></div>
+
+        <button
+          type="submit"
+          id="fetchBtn"
+          class="w-full bg-xblue hover:bg-xbluehover active:scale-[0.99] text-white font-bold py-3.5 rounded-xl shadow-sm hover:shadow-md flex items-center justify-center space-x-2 text-sm sm:text-base transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-xblue"
+        >
+          <span>Extract Video Qualities</span>
+          <i class="fa-solid fa-bolt text-xs" aria-hidden="true"></i>
+        </button>
+      </form>
+
+      <!-- Feature Highlights & Working Example -->
+      <div class="mt-6 pt-5 border-t border-gray-100 dark:border-xborder flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <span class="flex items-center space-x-1"><i class="fa-solid fa-check text-green-500" aria-hidden="true"></i><span>Live Progress Save</span></span>
+          <span class="flex items-center space-x-1"><i class="fa-solid fa-check text-green-500" aria-hidden="true"></i><span>File Sizes</span></span>
+          <span class="flex items-center space-x-1"><i class="fa-solid fa-check text-green-500" aria-hidden="true"></i><span>Quoted Posts &amp; GIFs</span></span>
+        </div>
+        <button
+          type="button"
+          onclick="loadSampleLink()"
+          class="text-xblue hover:underline font-medium inline-flex items-center space-x-1 rounded-lg px-1 py-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+        >
+          <i class="fa-solid fa-wand-magic-sparkles text-[11px]" aria-hidden="true"></i>
+          <span>Load working example</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- SECTION 2: Skeleton Loading State -->
+    <section id="loadingSection" aria-busy="true" class="hidden w-full bg-white dark:bg-xcard rounded-2xl shadow-sm border border-gray-200 dark:border-xborder overflow-hidden p-6">
+      <div class="flex items-center justify-between border-b border-gray-100 dark:border-xborder pb-4 mb-5">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse"></div>
+          <div class="space-y-2">
+            <div class="w-36 h-3.5 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+            <div class="w-24 h-2.5 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span id="loadingStatusBadge" class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/60 text-xblue rounded-full text-[11px] font-semibold">
+            Fetching...
+          </span>
+          <button
+            type="button"
+            onclick="cancelActiveFetch()"
+            class="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-950/50 text-gray-500 hover:text-red-500 text-[11px] font-semibold transition"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-6">
+        <div class="w-full sm:w-5/12 aspect-[9/13] max-h-72 rounded-xl bg-gray-200 dark:bg-gray-800 animate-pulse flex items-center justify-center">
+          <i class="fa-brands fa-x-twitter text-3xl text-gray-400 dark:text-gray-600" aria-hidden="true"></i>
+        </div>
+        <div class="w-full sm:w-7/12 space-y-3 flex flex-col justify-center">
+          <div class="w-1/2 h-4 bg-gray-200 dark:bg-gray-800 rounded animate-pulse mb-2"></div>
+          <div class="w-full h-12 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse"></div>
+          <div class="w-full h-12 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse"></div>
+          <div class="w-full h-12 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse"></div>
+          <p id="loadingSubtext" class="text-center text-xs text-gray-400 pt-2">Querying primary media endpoint...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: Results Display -->
+    <section id="resultSection" class="hidden w-full bg-white dark:bg-xcard rounded-2xl shadow-sm border border-gray-200 dark:border-xborder overflow-hidden transition-colors">
+
+      <!-- Tweet Context Header -->
+      <div class="p-4 sm:px-6 border-b border-gray-100 dark:border-xborder flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center space-x-3 min-w-0 flex-1">
+          <img
+            id="authorAvatar"
+            src=""
+            alt="Author Avatar"
+            class="w-10 h-10 rounded-full object-cover bg-gray-200 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 shrink-0"
+          />
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+              <h3 id="tweetAuthorName" class="font-bold text-sm text-gray-900 dark:text-white leading-tight truncate">Author</h3>
+              <span id="tweetAuthorHandle" class="text-xs text-gray-500 dark:text-gray-400 truncate">@handle</span>
+              <span id="quotedBadge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
+                From Quoted Post
+              </span>
+            </div>
+            <p id="tweetSnippet" class="text-xs text-gray-600 dark:text-gray-300 truncate max-w-md mt-0.5"></p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 shrink-0">
+          <a
+            id="viewOnXLink"
+            href="https://x.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-xdark hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-xborder transition inline-flex items-center space-x-1"
+            title="Open original post on X"
+          >
+            <i class="fa-brands fa-x-twitter text-[11px]" aria-hidden="true"></i>
+            <span class="hidden sm:inline">View Post</span>
+          </a>
+
+          <span id="foundCountBadge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 dark:bg-green-950/60 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/50">
+            1 Video Ready
+          </span>
+        </div>
+      </div>
+
+      <!-- Multi-Video Switcher Tabs -->
+      <div id="multiVideoTabs" class="hidden bg-gray-50 dark:bg-xdark px-4 py-2 border-b border-gray-200 dark:border-xborder flex items-center space-x-2 overflow-x-auto">
+        <!-- Populated dynamically via safe DOM nodes -->
+      </div>
+
+      <!-- Main Results Body (Adapts for Portrait vs. Landscape Videos) -->
+      <div class="p-5 sm:p-6">
+        <div id="resultsLayoutGrid" class="flex flex-col md:flex-row gap-6 items-center md:items-start">
+
+          <!-- Inline Interactive Video Player Column -->
+          <div id="playerColumn" class="w-full md:w-5/12 flex flex-col items-center">
+            <div id="playerFrame" class="relative w-full max-w-[260px] rounded-xl overflow-hidden bg-black shadow-md border border-gray-200 dark:border-xborder">
+              <video
+                id="inlineVideoPlayer"
+                controls
+                playsinline
+                preload="metadata"
+                class="w-full max-h-[340px] object-contain bg-black"
+              ></video>
+
+              <!-- Overlay Badges (GIF / Duration) -->
+              <div class="absolute top-2 left-2 flex items-center space-x-1.5 pointer-events-none">
+                <span id="gifBadge" class="hidden px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-sm text-white text-[10px] font-bold tracking-wider uppercase border border-white/15">
+                  GIF
+                </span>
+                <span id="durationBadge" class="hidden px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-sm text-white text-[10px] font-mono font-semibold border border-white/15">
+                  0:00
+                </span>
+              </div>
+            </div>
+
+            <!-- Preview Caption + Save Thumbnail Button -->
+            <div class="w-full max-w-[260px] mt-2.5 flex items-center justify-between gap-2 text-[11px] text-gray-400" id="playerMetaBar">
+              <span class="flex items-center space-x-1 truncate">
+                <i class="fa-solid fa-circle-play text-xblue" aria-hidden="true"></i>
+                <span id="previewQualityHint">Preview stream</span>
+              </span>
+
+              <button
+                type="button"
+                id="downloadThumbBtn"
+                onclick="downloadActiveThumbnail()"
+                class="hidden text-xblue hover:underline font-medium inline-flex items-center space-x-1 shrink-0 rounded px-1 py-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+                title="Download video cover thumbnail image"
+              >
+                <i class="fa-regular fa-image" aria-hidden="true"></i>
+                <span>Save Cover</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Download Action List Column -->
+          <div id="actionsColumn" class="w-full md:w-7/12 flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex items-center justify-between mb-2.5">
+                <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Available MP4 Formats</span>
+                <span class="text-[11px] text-gray-400">Size shown per quality</span>
+              </div>
+
+              <!-- Quality Buttons Container -->
+              <div id="downloadButtonsList" class="space-y-2.5">
+                <!-- Populated dynamically via safe DOM nodes -->
+              </div>
+            </div>
+
+            <!-- Direct MP4 URL Box -->
+            <div class="pt-4 border-t border-gray-100 dark:border-xborder">
+              <div class="flex items-center justify-between mb-1.5">
+                <label for="directUrlInput" class="block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                  Direct CDN Stream Link (Highest Quality):
+                </label>
+                <a id="openRawLink" href="#" target="_blank" rel="noopener noreferrer" class="text-[11px] text-xblue hover:underline flex items-center space-x-1">
+                  <span>Open in new tab</span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[9px]" aria-hidden="true"></i>
+                </a>
+              </div>
+              <div class="flex items-center space-x-2 bg-gray-50 dark:bg-xdark p-1.5 rounded-xl border border-gray-200 dark:border-xborder">
+                <input
+                  type="text"
+                  id="directUrlInput"
+                  readonly
+                  class="w-full bg-transparent text-xs text-gray-700 dark:text-gray-300 outline-none font-mono px-2 truncate"
+                />
+                <button
+                  type="button"
+                  onclick="copyDirectUrl()"
+                  class="px-3 py-1.5 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-semibold rounded-lg transition flex items-center space-x-1 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+                >
+                  <i class="fa-regular fa-copy" aria-hidden="true"></i>
+                  <span>Copy</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="border-t border-gray-200 dark:border-xborder bg-gray-50 dark:bg-xdark/60 px-5 py-3.5 flex items-center justify-between">
+        <button
+          type="button"
+          onclick="resetToInput()"
+          class="w-full py-2.5 bg-gray-900 hover:bg-black dark:bg-white dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold rounded-xl text-xs sm:text-sm tracking-wide transition flex items-center justify-center space-x-2 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+        >
+          <i class="fa-solid fa-rotate-left text-xs" aria-hidden="true"></i>
+          <span>Extract Another Video</span>
+          <span class="hidden sm:inline text-[10px] opacity-60 font-mono ml-1">(Esc)</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- SECTION 4: Error State Notice -->
+    <section id="errorSection" role="alert" class="hidden w-full bg-white dark:bg-xcard rounded-2xl p-6 border border-red-200 dark:border-red-900/50 shadow-sm text-center">
+      <div class="w-12 h-12 rounded-full bg-red-50 dark:bg-red-950/60 text-red-500 flex items-center justify-center mx-auto mb-3">
+        <i class="fa-solid fa-triangle-exclamation text-xl" aria-hidden="true"></i>
+      </div>
+      <h3 class="text-base font-bold text-gray-900 dark:text-white" id="errorTitle">No Video Found</h3>
+      <p class="text-xs text-gray-600 dark:text-gray-400 mt-1.5 max-w-md mx-auto leading-relaxed" id="errorMessage">
+        We could not find any playable MP4 video in the provided post. Please make sure the post is public and contains a video or GIF.
+      </p>
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+        <button
+          type="button"
+          onclick="resetToInput()"
+          class="px-5 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-semibold rounded-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+        >
+          Try Another Link
+        </button>
+        <button
+          type="button"
+          onclick="loadSampleLink()"
+          class="px-5 py-2.5 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-xblue text-xs font-semibold rounded-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+        >
+          Load Working Sample
+        </button>
+      </div>
+    </section>
+
+    <!-- SECTION 5: Recent Extractions History (Local Storage) -->
+    <section id="historySection" class="hidden bg-white dark:bg-xcard rounded-2xl shadow-sm border border-gray-200 dark:border-xborder p-5 transition-colors">
+      <div class="flex items-center justify-between mb-3.5">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-clock-rotate-left text-xblue text-xs" aria-hidden="true"></i>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Recent Extractions</h3>
+        </div>
+        <button
+          type="button"
+          onclick="clearHistory()"
+          class="text-[11px] font-medium text-gray-400 hover:text-red-500 transition rounded px-1.5 py-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+        >
+          Clear All
+        </button>
+      </div>
+      <div id="historyList" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <!-- Populated securely via DOM nodes -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white dark:bg-xcard border-t border-gray-200 dark:border-xborder py-4 px-4 text-center text-xs text-gray-500 dark:text-gray-400 mt-auto transition-colors">
+    <div class="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <p class="font-medium">X Video Downloader Pro &bull; Client-Side MP4 Extractor</p>
+      <p class="text-[11px] text-gray-400">Videos stream directly from Twitter / X CDN servers</p>
+    </div>
+  </footer>
+
+  <script>
+    /* =========================================================================
+     * CONSTANTS & APPLICATION STATE
+     * ========================================================================= */
+    const DEFAULT_AVATAR_URL = "https://placehold.co/80x80/1DA1F2/ffffff?text=X";
+    const SAMPLE_LINK = "https://x.com/MinendTL/status/2073996017884627428?s=20";
+
+    // Fixed fallback data: thumb is omitted (instead of an .mp4) so the video element renders its first frame cleanly
+    const SAMPLE_FALLBACK = {
+      id: "2073996017884627428",
+      authorName: "Minend",
+      authorHandle: "MinendTL",
+      avatar: DEFAULT_AVATAR_URL,
+      text: "Sample high-definition vertical video post for testing multi-resolution MP4 extraction.",
+      isQuoted: false,
+      videos: [
+        {
+          type: "video",
+          thumb: "",
+          duration: 18,
+          resolutions: [
+            { width: 320, height: 568, bitrate: 632000, url: "https://video.twimg.com/amplify_video/2073992784671862784/vid/avc1/320x568/0BoHnK8RdxYlmCtr.mp4" },
+            { width: 480, height: 852, bitrate: 950000, url: "https://video.twimg.com/amplify_video/2073992784671862784/vid/avc1/480x852/0BoHnK8RdxYlmCtr.mp4" },
+            { width: 720, height: 1280, bitrate: 2176000, url: "https://video.twimg.com/amplify_video/2073992784671862784/vid/avc1/720x1280/0BoHnK8RdxYlmCtr.mp4" },
+            { width: 1080, height: 1920, bitrate: 5000000, url: "https://video.twimg.com/amplify_video/2073992784671862784/vid/avc1/1080x1920/0BoHnK8RdxYlmCtr.mp4" }
+          ]
+        }
+      ]
+    };
+
+    const STORAGE_KEY_HISTORY = "x_downloader_history_v2";
+    const STORAGE_KEY_THEME = "x_downloader_theme";
+    const API_TIMEOUT_MS = 8500;
+
+    let currentTweetData = null;
+    let activeVideoIndex = 0;
+
+    // Race-condition & cancellation state
+    let activeRequestId = 0;
+    let activeFetchController = null;
+    let sizeProbeController = null;
+    const activeDownloadControllers = new Set();
+
+    /* =========================================================================
+     * INITIALIZATION & KEYBOARD SHORTCUTS
+     * ========================================================================= */
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      renderHistory();
+
+      // Safe avatar fallback handler
+      const avatarEl = document.getElementById('authorAvatar');
+      avatarEl.addEventListener('error', () => {
+        if (avatarEl.src !== DEFAULT_AVATAR_URL) {
+          avatarEl.src = DEFAULT_AVATAR_URL;
+        }
+      });
+
+      // Check for ?url=... query parameter for bookmarklets & mobile shortcuts
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const queryUrl = params.get('url') || params.get('tweet') || params.get('id');
+        if (queryUrl && extractTweetDetails(queryUrl)) {
+          const input = document.getElementById('urlInput');
+          input.value = queryUrl.trim();
+          handleUrlInputChange(input.value);
+          handleFormSubmit(new Event('submit'));
+          return;
+        }
+      } catch (err) {
+        console.warn("Query parameter check failed:", err);
+      }
+
+      document.getElementById('urlInput').focus();
+    });
+
+    // Global Escape key resets from Result / Error / Loading back to Input
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const drawer = document.getElementById('drawerMenu');
+        if (!drawer.classList.contains('hidden')) {
+          setMobileMenuOpen(false);
+          return;
+        }
+        const inputVisible = !document.getElementById('inputSection').classList.contains('hidden');
+        if (!inputVisible) {
+          resetToInput();
+        }
+      }
+    });
+
+    /* =========================================================================
+     * SECURITY & STORAGE HELPERS
+     * ========================================================================= */
+    function isSafeHttpsUrl(rawUrl) {
+      if (!rawUrl || typeof rawUrl !== 'string') return false;
+      try {
+        const parsed = new URL(rawUrl.trim());
+        return parsed.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    }
+
+    function sanitizeFilenamePart(str, fallback = 'video') {
+      const cleaned = String(str || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40);
+      return cleaned || fallback;
+    }
+
+    function safeStorageGet(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    }
+
+    function safeStorageSet(key, value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch {
+        // Ignore quota or private-browsing storage errors
+      }
+    }
+
+    function safeStorageRemove(key) {
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        // Ignore storage errors
+      }
+    }
+
+    /* =========================================================================
+     * THEME & NAVIGATION MENU MANAGEMENT
+     * ========================================================================= */
+    function initTheme() {
+      const savedTheme = safeStorageGet(STORAGE_KEY_THEME);
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+      applyTheme(isDark);
+    }
+
+    function toggleTheme() {
+      const isDark = !document.documentElement.classList.contains('dark');
+      applyTheme(isDark);
+      safeStorageSet(STORAGE_KEY_THEME, isDark ? 'dark' : 'light');
+    }
+
+    function applyTheme(isDark) {
+      const htmlEl = document.documentElement;
+      const icon = document.getElementById('themeIcon');
+      if (isDark) {
+        htmlEl.classList.add('dark');
+        icon.className = "fa-solid fa-sun text-amber-400 text-base";
+      } else {
+        htmlEl.classList.remove('dark');
+        icon.className = "fa-solid fa-moon text-base";
+      }
+    }
+
+    function toggleMobileMenu() {
+      const drawer = document.getElementById('drawerMenu');
+      setMobileMenuOpen(drawer.classList.contains('hidden'));
+    }
+
+    function setMobileMenuOpen(isOpen) {
+      const drawer = document.getElementById('drawerMenu');
+      const menuBtn = document.getElementById('menuBtn');
+      const menuIcon = document.getElementById('menuIcon');
+      if (isOpen) {
+        drawer.classList.remove('hidden');
+        menuBtn.setAttribute('aria-expanded', 'true');
+        menuIcon.className = "fa-solid fa-xmark text-base";
+      } else {
+        drawer.classList.add('hidden');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        menuIcon.className = "fa-solid fa-bars text-base";
+      }
+    }
+
+    /* =========================================================================
+     * TOAST & CLIPBOARD HELPERS
+     * ========================================================================= */
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMsg.textContent = message;
+      toastIcon.className = isError
+        ? "fa-solid fa-circle-exclamation text-red-400 shrink-0"
+        : "fa-solid fa-circle-check text-green-400 dark:text-green-600 shrink-0";
+
+      toast.classList.remove('hidden');
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3200);
+    }
+
+    // Uses execCommand('copy') so clipboard copy works cleanly inside sandboxed iframes
+    function copyToClipboard(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.setAttribute('readonly', '');
+      textArea.style.position = "fixed";
+      textArea.style.top = "-9999px";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
+      document.body.removeChild(textArea);
+
+      if (!ok && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {});
+        return true;
+      }
+      return ok;
+    }
+
+    /* =========================================================================
+     * URL PARSING & INPUT VALIDATION
+     * ========================================================================= */
+    function extractTweetDetails(rawInput) {
+      if (!rawInput || typeof rawInput !== 'string') return null;
+      const trimmed = rawInput.trim();
+
+      // Match standard, mobile, and embed-proxy domains (x.com, twitter.com, fxtwitter, vxtwitter, fixupx, fixvx)
+      const domainMatch = trimmed.match(
+        /(?:(?:mobile|www)\.)?(?:twitter|x|fxtwitter|vxtwitter|fixupx|fixvx|girlcockx|twittpr)\.com\/([a-zA-Z0-9_]+)\/status(?:es)?\/(\d{6,22})/i
+      );
+      if (domainMatch) {
+        return { username: domainMatch[1], id: domainMatch[2] };
+      }
+
+      // Match /status/ID anywhere inside messy share text
+      const statusMatch = trimmed.match(/\/status(?:es)?\/(\d{6,22})/i);
+      if (statusMatch) {
+        return { username: 'i', id: statusMatch[1] };
+      }
+
+      // Accept raw numeric Tweet ID (15-20 digits)
+      const rawIdMatch = trimmed.match(/^(\d{15,20})$/);
+      if (rawIdMatch) {
+        return { username: 'i', id: rawIdMatch[1] };
+      }
+
+      return null;
+    }
+
+    function handleUrlInputChange(val) {
+      const clearBtn = document.getElementById('clearInputBtn');
+      const statusIcon = document.getElementById('inputStatusIcon');
+      const feedback = document.getElementById('validationFeedback');
+      const trimmed = val.trim();
+
+      if (trimmed.length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+        statusIcon.className = "fa-solid fa-link text-sm text-gray-400";
+        feedback.classList.add('hidden');
+        feedback.textContent = '';
+        return;
+      }
+
+      const details = extractTweetDetails(trimmed);
+      feedback.textContent = '';
+
+      if (details) {
+        statusIcon.className = "fa-solid fa-circle-check text-sm text-green-500";
+        feedback.className = "text-xs px-1 flex items-center space-x-1.5 text-green-600 dark:text-green-400";
+
+        const icon = document.createElement('i');
+        icon.className = "fa-solid fa-check";
+        const span = document.createElement('span');
+        span.textContent = "Detected Post ID: ";
+        const strong = document.createElement('strong');
+        strong.textContent = details.id;
+        span.appendChild(strong);
+        feedback.append(icon, span);
+        feedback.classList.remove('hidden');
+      } else if (trimmed.length > 10) {
+        statusIcon.className = "fa-solid fa-circle-exclamation text-sm text-amber-500";
+        feedback.className = "text-xs px-1 flex items-center space-x-1.5 text-amber-600 dark:text-amber-400";
+
+        const icon = document.createElement('i');
+        icon.className = "fa-solid fa-circle-info";
+        const span = document.createElement('span');
+        span.textContent = "Paste a valid x.com/user/status/ID link or numeric Tweet ID";
+        feedback.append(icon, span);
+        feedback.classList.remove('hidden');
+      } else {
+        feedback.classList.add('hidden');
+      }
+    }
+
+    function clearUrlInput() {
+      const input = document.getElementById('urlInput');
+      input.value = '';
+      handleUrlInputChange('');
+      input.focus();
+    }
+
+    function handleNativePaste() {
+      setTimeout(() => {
+        const val = document.getElementById('urlInput').value.trim();
+        handleUrlInputChange(val);
+        if (extractTweetDetails(val)) {
+          handleFormSubmit(new Event('submit'));
+        }
+      }, 60);
+    }
+
+    async function pasteFromClipboard() {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            const input = document.getElementById('urlInput');
+            input.value = text.trim();
+            handleUrlInputChange(input.value);
+            showToast("Link pasted from clipboard");
+            if (extractTweetDetails(input.value)) {
+              handleFormSubmit(new Event('submit'));
+            }
+            return;
+          }
+        } catch {
+          // Clipboard read permission denied or blocked in iframe
+        }
+      }
+      const input = document.getElementById('urlInput');
+      input.focus();
+      showToast("Press Ctrl+V or Cmd+V to paste your link", true);
+    }
+
+    function loadSampleLink() {
+      const input = document.getElementById('urlInput');
+      input.value = SAMPLE_LINK;
+      handleUrlInputChange(SAMPLE_LINK);
+      setMobileMenuOpen(false);
+      handleFormSubmit(new Event('submit'));
+    }
+
+    /* =========================================================================
+     * NETWORKING WITH TIMEOUTS & CANCELLATION
+     * ========================================================================= */
+    async function fetchWithTimeout(url, timeoutMs, parentSignal, fetchOptions = {}) {
+      const timeoutCtrl = new AbortController();
+      const timerId = setTimeout(() => timeoutCtrl.abort(), timeoutMs);
+
+      const onParentAbort = () => timeoutCtrl.abort();
+      if (parentSignal) {
+        if (parentSignal.aborted) {
+          clearTimeout(timerId);
+          throw new DOMException('Aborted', 'AbortError');
+        }
+        parentSignal.addEventListener('abort', onParentAbort, { once: true });
+      }
+
+      try {
+        return await fetch(url, { ...fetchOptions, signal: timeoutCtrl.signal });
+      } finally {
+        clearTimeout(timerId);
+        if (parentSignal) {
+          parentSignal.removeEventListener('abort', onParentAbort);
+        }
+      }
+    }
+
+    function cancelActiveFetch() {
+      if (activeFetchController) {
+        activeFetchController.abort();
+        activeFetchController = null;
+      }
+      activeRequestId++;
+      resetToInput();
+      showToast("Extraction cancelled");
+    }
+
+    async function handleFormSubmit(e) {
+      if (e) e.preventDefault();
+      const inputUrl = document.getElementById('urlInput').value.trim();
+      const tweetDetails = extractTweetDetails(inputUrl);
+
+      if (!tweetDetails) {
+        showToast("Please enter a valid X / Twitter post link or ID", true);
+        return;
+      }
+
+      // Cancel any previous in-flight extraction, size probes, or downloads
+      if (activeFetchController) activeFetchController.abort();
+      abortSizeProbes();
+      abortAllDownloads();
+      stopInlineVideo();
+
+      const requestId = ++activeRequestId;
+      activeFetchController = new AbortController();
+      const { signal } = activeFetchController;
+
+      // Show Skeleton Loader
+      document.getElementById('inputSection').classList.add('hidden');
+      document.getElementById('resultSection').classList.add('hidden');
+      document.getElementById('errorSection').classList.add('hidden');
+      document.getElementById('loadingSection').classList.remove('hidden');
+      document.getElementById('loadingStatusBadge').textContent = "Fetching...";
+      document.getElementById('loadingSubtext').textContent = "Querying primary media endpoint (FxTwitter)...";
+
+      try {
+        let normalizedData = null;
+
+        // 1. Primary API: FixTweet (FxTwitter) — supports variants, bitrates, durations, and quoted tweets
+        try {
+          const res = await fetchWithTimeout(`https://api.fxtwitter.com/i/status/${tweetDetails.id}`, API_TIMEOUT_MS, signal);
+          if (res.ok) {
+            const raw = await res.json();
+            if (raw && raw.code === 200 && raw.tweet) {
+              if (raw.tweet.media?.videos?.length > 0) {
+                normalizedData = normalizeFxTwitter(raw.tweet, tweetDetails.id, false);
+              } else if (raw.tweet.quote?.media?.videos?.length > 0) {
+                normalizedData = normalizeFxTwitter(raw.tweet.quote, tweetDetails.id, true);
+              }
+            }
+          }
+        } catch (apiErr) {
+          if (signal.aborted) return;
+          console.warn("Primary API failed or timed out, failing over...", apiErr);
+        }
+
+        if (requestId !== activeRequestId || signal.aborted) return;
+
+        // 2. Secondary API: VxTwitter failover
+        if (!normalizedData) {
+          document.getElementById('loadingStatusBadge').textContent = "Backup API...";
+          document.getElementById('loadingSubtext').textContent = "Trying backup media endpoint (VxTwitter)...";
+
+          try {
+            const vxRes = await fetchWithTimeout(`https://api.vxtwitter.com/Twitter/status/${tweetDetails.id}`, API_TIMEOUT_MS, signal);
+            if (vxRes.ok) {
+              const vxRaw = await vxRes.json();
+              if (vxRaw && Array.isArray(vxRaw.media_extended) && vxRaw.media_extended.some(m => m.type === 'video' || m.type === 'gif')) {
+                normalizedData = normalizeVxTwitter(vxRaw, tweetDetails.id, false);
+              } else if (vxRaw?.qrt && Array.isArray(vxRaw.qrt.media_extended) && vxRaw.qrt.media_extended.some(m => m.type === 'video' || m.type === 'gif')) {
+                normalizedData = normalizeVxTwitter(vxRaw.qrt, tweetDetails.id, true);
+              }
+            }
+          } catch (vxErr) {
+            if (signal.aborted) return;
+            console.warn("Secondary API failed or timed out:", vxErr);
+          }
+        }
+
+        if (requestId !== activeRequestId || signal.aborted) return;
+
+        // 3. Offline / Rate-Limit Fallback for Built-In Sample Post
+        if (!normalizedData && (tweetDetails.id === "2073996017884627428" || inputUrl.includes("MinendTL"))) {
+          normalizedData = JSON.parse(JSON.stringify(SAMPLE_FALLBACK));
+        }
+
+        if (normalizedData && normalizedData.videos.length > 0) {
+          currentTweetData = normalizedData;
+          activeVideoIndex = 0;
+          saveToHistory(normalizedData);
+          renderTweetResults();
+        } else {
+          showErrorNotice(
+            "No Playable Video Found",
+            "This post (and any quoted post) doesn't appear to contain a video or GIF, or the account is private/age-restricted."
+          );
+        }
+      } catch (err) {
+        if (signal.aborted || requestId !== activeRequestId) return;
+        console.error("Extraction error:", err);
+        showErrorNotice(
+          "Network Error",
+          "Could not connect to media extraction servers. Please check your internet connection and try again."
+        );
+      } finally {
+        if (requestId === activeRequestId) {
+          document.getElementById('loadingSection').classList.add('hidden');
+          activeFetchController = null;
+        }
+      }
+    }
+
+    /* =========================================================================
+     * API RESPONSE NORMALIZERS
+     * ========================================================================= */
+    function normalizeFxTwitter(tweet, fallbackId, isQuoted) {
+      const rawVideos = Array.isArray(tweet.media?.videos) ? tweet.media.videos : [];
+      const videos = [];
+
+      rawVideos.forEach(vObj => {
+        let resolutions = [];
+
+        if (Array.isArray(vObj.variants) && vObj.variants.length > 0) {
+          const mp4s = vObj.variants.filter(v =>
+            isSafeHttpsUrl(v.url) &&
+            ((v.content_type && v.content_type.includes('mp4')) || v.url.includes('.mp4'))
+          );
+
+          resolutions = mp4s.map(v => {
+            let w = vObj.width || 720;
+            let h = vObj.height || 1280;
+            const dimMatch = v.url.match(/\/(\d+)x(\d+)\//);
+            if (dimMatch) {
+              w = parseInt(dimMatch[1], 10);
+              h = parseInt(dimMatch[2], 10);
+            } else if (v.bitrate) {
+              w = v.bitrate > 1500000 ? 1080 : v.bitrate > 800000 ? 720 : 480;
+              h = v.bitrate > 1500000 ? 1920 : v.bitrate > 800000 ? 1280 : 852;
+            }
+            return {
+              width: w,
+              height: h,
+              url: v.url,
+              bitrate: Number(v.bitrate) || 0,
+              exactBytes: 0
+            };
+          });
+        }
+
+        if (resolutions.length === 0 && isSafeHttpsUrl(vObj.url)) {
+          resolutions.push({
+            width: vObj.width || 720,
+            height: vObj.height || 1280,
+            url: vObj.url,
+            bitrate: 0,
+            exactBytes: 0
+          });
+        }
+
+        if (resolutions.length === 0) return;
+
+        // Sort highest bitrate first so deduplication always preserves the best encode per resolution
+        resolutions.sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
+
+        const unique = [];
+        const seen = new Set();
+        resolutions.forEach(r => {
+          const key = `${r.width}x${r.height}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            unique.push(r);
+          }
+        });
+
+        // Sort ascending by pixel count (lowest -> highest)
+        unique.sort((a, b) => (a.width * a.height) - (b.width * b.height));
+
+        const thumbUrl = isSafeHttpsUrl(vObj.thumbnail_url) ? vObj.thumbnail_url : "";
+        const isGif = vObj.type === 'gif' || (typeof vObj.url === 'string' && vObj.url.includes('tweet_video'));
+
+        videos.push({
+          type: isGif ? 'gif' : 'video',
+          thumb: thumbUrl,
+          duration: Number(vObj.duration) || 0,
+          resolutions: unique
+        });
+      });
+
+      return {
+        id: String(tweet.id || fallbackId),
+        authorName: tweet.author?.name || tweet.author?.screen_name || "X User",
+        authorHandle: tweet.author?.screen_name || "user",
+        avatar: isSafeHttpsUrl(tweet.author?.avatar_url) ? tweet.author.avatar_url : DEFAULT_AVATAR_URL,
+        text: tweet.text || "",
+        isQuoted: Boolean(isQuoted),
+        videos
+      };
+    }
+
+    function normalizeVxTwitter(vx, fallbackId, isQuoted) {
+      const videoMedia = (vx.media_extended || []).filter(
+        m => (m.type === 'video' || m.type === 'gif') && isSafeHttpsUrl(m.url)
+      );
+
+      const videos = videoMedia.map(m => ({
+        type: m.type === 'gif' ? 'gif' : 'video',
+        thumb: isSafeHttpsUrl(m.thumbnail_url) ? m.thumbnail_url : "",
+        duration: Number(m.duration_millis) ? Number(m.duration_millis) / 1000 : 0,
+        resolutions: [
+          {
+            width: m.size?.width || 720,
+            height: m.size?.height || 1280,
+            bitrate: 0,
+            exactBytes: 0,
+            url: m.url
+          }
+        ]
+      }));
+
+      return {
+        id: String(vx.tweetID || fallbackId),
+        authorName: vx.user_name || vx.user_screen_name || "X User",
+        authorHandle: vx.user_screen_name || "user",
+        avatar: isSafeHttpsUrl(vx.user_profile_image_url) ? vx.user_profile_image_url : DEFAULT_AVATAR_URL,
+        text: vx.text || "",
+        isQuoted: Boolean(isQuoted),
+        videos
+      };
+    }
+
+    /* =========================================================================
+     * FORMATTING & FILE SIZE PROBING HELPERS
+     * ========================================================================= */
+    function formatDuration(seconds) {
+      if (!seconds || !Number.isFinite(seconds) || seconds <= 0) return "";
+      const totalSecs = Math.round(seconds);
+      const hrs = Math.floor(totalSecs / 3600);
+      const mins = Math.floor((totalSecs % 3600) / 60);
+      const secs = totalSecs % 60;
+      if (hrs > 0) {
+        return `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }
+      return `${mins}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function formatFileSize(bytes) {
+      if (!bytes || !Number.isFinite(bytes) || bytes <= 0) return "";
+      if (bytes < 1024 * 1024) {
+        return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+      }
+      const mb = bytes / (1024 * 1024);
+      return mb >= 100 ? `${Math.round(mb)} MB` : `${mb.toFixed(1)} MB`;
+    }
+
+    function estimateFileSize(bitrate, durationSec) {
+      if (!bitrate || !durationSec || bitrate <= 0 || durationSec <= 0) return "";
+      const approxBytes = (bitrate * durationSec) / 8;
+      if (approxBytes < 1024 * 1024) {
+        return `~${Math.max(1, Math.round(approxBytes / 1024))} KB`;
+      }
+      const mb = approxBytes / (1024 * 1024);
+      return mb >= 100 ? `~${Math.round(mb)} MB` : `~${mb.toFixed(1)} MB`;
+    }
+
+    function formatBytesMB(bytes) {
+      if (!bytes || bytes <= 0) return "0.0 MB";
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function abortSizeProbes() {
+      if (sizeProbeController) {
+        sizeProbeController.abort();
+        sizeProbeController = null;
+      }
+    }
+
+    /**
+     * Probes the MP4 URL using a lightweight HEAD request to display the exact file size
+     * right next to the resolution before clicking download, falling back to bitrate estimate.
+     */
+    async function probeResolutionFileSize(res, activeVid, sizeTag, signal) {
+      if (res.exactBytes > 0) {
+        sizeTag.textContent = formatFileSize(res.exactBytes);
+        sizeTag.title = `Exact file size (${res.exactBytes.toLocaleString()} bytes)`;
+        sizeTag.classList.remove('hidden', 'animate-pulse');
+        return;
+      }
+
+      if (!isSafeHttpsUrl(res.url)) return;
+
+      try {
+        const response = await fetchWithTimeout(res.url, 5500, signal, { method: 'HEAD' });
+        if (signal.aborted || !response.ok) return;
+
+        const lenHeader = response.headers.get('content-length');
+        const bytes = lenHeader ? parseInt(lenHeader, 10) : 0;
+
+        if (bytes > 0) {
+          res.exactBytes = bytes;
+          sizeTag.textContent = formatFileSize(bytes);
+          sizeTag.title = `Exact file size (${bytes.toLocaleString()} bytes)`;
+          sizeTag.classList.remove('hidden', 'animate-pulse');
+          return;
+        }
+      } catch {
+        // Ignore abort or CORS HEAD failures and fall back cleanly
+      }
+
+      if (signal.aborted) return;
+
+      const est = estimateFileSize(res.bitrate, activeVid.duration);
+      sizeTag.classList.remove('animate-pulse');
+      if (est) {
+        sizeTag.textContent = est;
+        sizeTag.title = "Estimated file size from bitrate and duration";
+        sizeTag.classList.remove('hidden');
+      } else {
+        sizeTag.textContent = "";
+        sizeTag.classList.add('hidden');
+      }
+    }
+
+    /* =========================================================================
+     * RENDERING RESULTS (XSS-SAFE DOM CONSTRUCTION)
+     * ========================================================================= */
+    function renderTweetResults() {
+      if (!currentTweetData) return;
+
+      abortSizeProbes();
+      abortAllDownloads();
+      sizeProbeController = new AbortController();
+      const probeSignal = sizeProbeController.signal;
+
+      // Author & Post Context
+      const avatarEl = document.getElementById('authorAvatar');
+      avatarEl.src = isSafeHttpsUrl(currentTweetData.avatar) ? currentTweetData.avatar : DEFAULT_AVATAR_URL;
+      document.getElementById('tweetAuthorName').textContent = currentTweetData.authorName;
+      document.getElementById('tweetAuthorHandle').textContent = `@${currentTweetData.authorHandle}`;
+      document.getElementById('tweetSnippet').textContent = currentTweetData.text || "Video post on X";
+
+      const quotedBadge = document.getElementById('quotedBadge');
+      if (currentTweetData.isQuoted) {
+        quotedBadge.classList.remove('hidden');
+      } else {
+        quotedBadge.classList.add('hidden');
+      }
+
+      const viewOnXLink = document.getElementById('viewOnXLink');
+      const safeHandle = sanitizeFilenamePart(currentTweetData.authorHandle, 'i');
+      const safeId = String(currentTweetData.id).replace(/\D/g, '');
+      viewOnXLink.href = safeId ? `https://x.com/${safeHandle}/status/${safeId}` : 'https://x.com';
+
+      const totalVideos = currentTweetData.videos.length;
+      document.getElementById('foundCountBadge').textContent =
+        totalVideos > 1 ? `${totalVideos} Videos Ready` : `1 Video Ready`;
+
+      // Multi-Video Tabs
+      const tabsContainer = document.getElementById('multiVideoTabs');
+      tabsContainer.textContent = '';
+      if (totalVideos > 1) {
+        currentTweetData.videos.forEach((vid, idx) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          const isActive = idx === activeVideoIndex;
+          btn.className = `px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue ${
+            isActive
+              ? 'bg-xblue text-white shadow-sm'
+              : 'bg-white dark:bg-xcard text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-xborder'
+          }`;
+
+          const icon = document.createElement('i');
+          icon.className = vid.type === 'gif' ? 'fa-solid fa-repeat' : 'fa-solid fa-film';
+          icon.setAttribute('aria-hidden', 'true');
+
+          const label = document.createElement('span');
+          label.textContent = vid.type === 'gif' ? `GIF ${idx + 1}` : `Video ${idx + 1}`;
+
+          btn.append(icon, label);
+          btn.onclick = () => {
+            if (activeVideoIndex !== idx) {
+              stopInlineVideo();
+              activeVideoIndex = idx;
+              renderTweetResults();
+            }
+          };
+          tabsContainer.appendChild(btn);
+        });
+        tabsContainer.classList.remove('hidden');
+      } else {
+        tabsContainer.classList.add('hidden');
+      }
+
+      const activeVid = currentTweetData.videos[activeVideoIndex];
+      const resList = activeVid.resolutions;
+      const highestRes = resList[resList.length - 1];
+
+      // Use a mid-tier resolution for the inline preview player so it loads faster
+      const previewRes = resList.length >= 3
+        ? resList[Math.floor(resList.length / 2)]
+        : resList[0];
+
+      // Responsive layout adaptation: widen preview frame for landscape videos
+      const isLandscape = highestRes.width > highestRes.height;
+      const playerColumn = document.getElementById('playerColumn');
+      const actionsColumn = document.getElementById('actionsColumn');
+      const playerFrame = document.getElementById('playerFrame');
+      const playerMetaBar = document.getElementById('playerMetaBar');
+
+      if (isLandscape) {
+        playerColumn.className = "w-full md:w-6/12 flex flex-col items-center";
+        actionsColumn.className = "w-full md:w-6/12 flex flex-col justify-between space-y-4";
+        playerFrame.className = "relative w-full max-w-full rounded-xl overflow-hidden bg-black shadow-md border border-gray-200 dark:border-xborder";
+        playerMetaBar.className = "w-full mt-2.5 flex items-center justify-between gap-2 text-[11px] text-gray-400";
+      } else {
+        playerColumn.className = "w-full md:w-5/12 flex flex-col items-center";
+        actionsColumn.className = "w-full md:w-7/12 flex flex-col justify-between space-y-4";
+        playerFrame.className = "relative w-full max-w-[260px] rounded-xl overflow-hidden bg-black shadow-md border border-gray-200 dark:border-xborder";
+        playerMetaBar.className = "w-full max-w-[260px] mt-2.5 flex items-center justify-between gap-2 text-[11px] text-gray-400";
+      }
+
+      // Configure Inline Video Player
+      const player = document.getElementById('inlineVideoPlayer');
+      player.loop = activeVid.type === 'gif';
+      player.poster = isSafeHttpsUrl(activeVid.thumb) ? activeVid.thumb : '';
+      player.src = isSafeHttpsUrl(previewRes.url) ? previewRes.url : '';
+
+      document.getElementById('previewQualityHint').textContent =
+        `Preview (${previewRes.width}×${previewRes.height})`;
+
+      // Overlay badges (GIF + Duration)
+      const gifBadge = document.getElementById('gifBadge');
+      const durationBadge = document.getElementById('durationBadge');
+      if (activeVid.type === 'gif') {
+        gifBadge.classList.remove('hidden');
+      } else {
+        gifBadge.classList.add('hidden');
+      }
+
+      const durText = formatDuration(activeVid.duration);
+      if (durText && activeVid.type !== 'gif') {
+        durationBadge.textContent = durText;
+        durationBadge.classList.remove('hidden');
+      } else {
+        durationBadge.classList.add('hidden');
+      }
+
+      // Save Cover Thumbnail button visibility
+      const thumbBtn = document.getElementById('downloadThumbBtn');
+      if (isSafeHttpsUrl(activeVid.thumb)) {
+        thumbBtn.classList.remove('hidden');
+      } else {
+        thumbBtn.classList.add('hidden');
+      }
+
+      // Update Direct Stream Box (Points to highest quality by default)
+      document.getElementById('directUrlInput').value = highestRes.url;
+      document.getElementById('openRawLink').href = highestRes.url;
+
+      // Populate Quality Buttons (Sorted Highest to Lowest)
+      const btnContainer = document.getElementById('downloadButtonsList');
+      btnContainer.textContent = '';
+
+      const sortedDesc = [...resList].reverse();
+      const sizeTagEntries = [];
+
+      sortedDesc.forEach((res, index) => {
+        const maxDim = Math.max(res.width, res.height);
+        const minDim = Math.min(res.width, res.height);
+        let qualityBadge = "SD";
+        let badgeColor = "bg-white/20 text-white";
+
+        if (activeVid.type === 'gif') {
+          qualityBadge = "GIF MP4";
+          badgeColor = "bg-purple-300 text-gray-900 font-bold";
+        } else if (maxDim >= 1920 || minDim >= 1080) {
+          qualityBadge = "FULL HD";
+          badgeColor = "bg-amber-400 text-gray-900 font-bold";
+        } else if (maxDim >= 1280 || minDim >= 720) {
+          qualityBadge = "HD 720p";
+          badgeColor = "bg-green-400 text-gray-900 font-bold";
+        }
+
+        const estSize = estimateFileSize(res.bitrate, activeVid.duration);
+
+        // Wrapper holding button row + live streamed download progress bar
+        const itemWrapper = document.createElement('div');
+        itemWrapper.className = "space-y-1.5";
+
+        const row = document.createElement('div');
+        row.className = "flex items-center space-x-2";
+
+        // Download Quality Button
+        const dlBtn = document.createElement('button');
+        dlBtn.type = "button";
+        dlBtn.className = "flex-1 bg-xblue hover:bg-xbluehover active:scale-[0.99] text-white font-semibold py-3 px-3 sm:px-4 rounded-xl shadow-sm text-xs sm:text-sm flex items-center justify-between gap-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-xblue";
+
+        const leftSpan = document.createElement('span');
+        leftSpan.className = "flex items-center space-x-2 min-w-0";
+
+        const dlIcon = document.createElement('i');
+        dlIcon.className = "fa-solid fa-download shrink-0";
+        dlIcon.setAttribute('aria-hidden', 'true');
+
+        const resText = document.createElement('span');
+        resText.className = "truncate";
+        resText.textContent = `${res.width} × ${res.height}`;
+
+        // File size pill right next to the resolution (visible on mobile & desktop)
+        const sizeTag = document.createElement('span');
+        sizeTag.className = "text-[11px] bg-black/20 text-white/95 px-1.5 py-0.5 rounded font-mono shrink-0";
+        if (res.exactBytes > 0) {
+          sizeTag.textContent = formatFileSize(res.exactBytes);
+          sizeTag.title = `Exact file size (${res.exactBytes.toLocaleString()} bytes)`;
+        } else if (estSize) {
+          sizeTag.textContent = estSize;
+          sizeTag.title = "Estimated file size (checking exact size...)";
+        } else {
+          sizeTag.textContent = "...";
+          sizeTag.title = "Checking file size...";
+          sizeTag.classList.add('animate-pulse');
+        }
+
+        leftSpan.append(dlIcon, resText, sizeTag);
+
+        if (index === 0 && sortedDesc.length > 1) {
+          const bestTag = document.createElement('span');
+          bestTag.className = "text-[10px] bg-white/20 px-1.5 py-0.5 rounded hidden sm:inline shrink-0";
+          bestTag.textContent = "Best";
+          leftSpan.appendChild(bestTag);
+        }
+
+        const rightSpan = document.createElement('span');
+        rightSpan.className = "flex items-center shrink-0";
+
+        const badgeSpan = document.createElement('span');
+        badgeSpan.className = `text-[11px] px-2 py-0.5 rounded font-mono ${badgeColor}`;
+        badgeSpan.textContent = qualityBadge;
+        rightSpan.appendChild(badgeSpan);
+
+        dlBtn.append(leftSpan, rightSpan);
+
+        // Kick off lightweight HEAD size probe
+        sizeTagEntries.push({ res, sizeTag });
+        probeResolutionFileSize(res, activeVid, sizeTag, probeSignal);
+
+        // Copy Specific Resolution URL Button
+        const copyBtn = document.createElement('button');
+        copyBtn.type = "button";
+        copyBtn.title = `Copy ${res.width}x${res.height} direct URL`;
+        copyBtn.setAttribute('aria-label', `Copy ${res.width} by ${res.height} direct URL`);
+        copyBtn.className = "p-3 bg-gray-100 dark:bg-xdark hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl border border-gray-200 dark:border-xborder transition shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue";
+
+        const copyIcon = document.createElement('i');
+        copyIcon.className = "fa-regular fa-copy text-sm";
+        copyIcon.setAttribute('aria-hidden', 'true');
+        copyBtn.appendChild(copyIcon);
+
+        copyBtn.onclick = () => {
+          copyToClipboard(res.url);
+          document.getElementById('directUrlInput').value = res.url;
+          document.getElementById('openRawLink').href = res.url;
+          showToast(`Copied ${res.width}×${res.height} direct URL!`);
+        };
+
+        // Streamed Download Progress Bar Container (Hidden until downloading)
+        const progressBox = document.createElement('div');
+        progressBox.className = "hidden bg-gray-50 dark:bg-xdark border border-gray-200 dark:border-xborder rounded-xl p-2.5 space-y-1.5";
+
+        const progressHeader = document.createElement('div');
+        progressHeader.className = "flex items-center justify-between text-[11px] text-gray-600 dark:text-gray-300 font-medium";
+
+        const progressLabel = document.createElement('span');
+        progressLabel.className = "font-mono truncate";
+        progressLabel.textContent = "Starting download...";
+
+        const cancelDlBtn = document.createElement('button');
+        cancelDlBtn.type = "button";
+        cancelDlBtn.className = "text-red-500 hover:underline font-semibold ml-2 shrink-0";
+        cancelDlBtn.textContent = "Cancel";
+
+        progressHeader.append(progressLabel, cancelDlBtn);
+
+        const track = document.createElement('div');
+        track.className = "w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden";
+
+        const bar = document.createElement('div');
+        bar.className = "h-full bg-xblue rounded-full transition-all duration-150";
+        bar.style.width = "0%";
+        track.appendChild(bar);
+
+        progressBox.append(progressHeader, track);
+
+        // Wire up streamed download with progress + cancellation + size sync
+        dlBtn.onclick = () => triggerStreamedDownload({
+          btnElement: dlBtn,
+          progressBox,
+          progressLabel,
+          progressBar: bar,
+          cancelBtn: cancelDlBtn,
+          res,
+          sizeTag,
+          url: res.url,
+          width: res.width,
+          height: res.height
+        });
+
+        row.append(dlBtn, copyBtn);
+        itemWrapper.append(row, progressBox);
+        btnContainer.appendChild(itemWrapper);
+      });
+
+      // Fallback: if API omitted duration, calculate estimates once the video player loads duration metadata
+      player.onloadedmetadata = () => {
+        if (!activeVid.duration && Number.isFinite(player.duration) && player.duration > 0) {
+          activeVid.duration = player.duration;
+          const loadedDurText = formatDuration(activeVid.duration);
+          if (loadedDurText && activeVid.type !== 'gif') {
+            durationBadge.textContent = loadedDurText;
+            durationBadge.classList.remove('hidden');
+          }
+          sizeTagEntries.forEach(({ res, sizeTag }) => {
+            if (!res.exactBytes && res.bitrate > 0) {
+              const est = estimateFileSize(res.bitrate, activeVid.duration);
+              if (est) {
+                sizeTag.textContent = est;
+                sizeTag.title = "Estimated file size from bitrate and duration";
+                sizeTag.classList.remove('hidden', 'animate-pulse');
+              }
+            }
+          });
+        }
+      };
+
+      document.getElementById('resultSection').classList.remove('hidden');
+    }
+
+    /* =========================================================================
+     * STREAMED DOWNLOAD ENGINE (LIVE PROGRESS + CANCELLATION + FALLBACK)
+     * ========================================================================= */
+    function abortAllDownloads() {
+      activeDownloadControllers.forEach(ctrl => ctrl.abort());
+      activeDownloadControllers.clear();
+    }
+
+    async function triggerStreamedDownload({
+      btnElement,
+      progressBox,
+      progressLabel,
+      progressBar,
+      cancelBtn,
+      res,
+      sizeTag,
+      url,
+      width,
+      height
+    }) {
+      if (!isSafeHttpsUrl(url)) {
+        showToast("Invalid media URL", true);
+        return;
+      }
+
+      const controller = new AbortController();
+      activeDownloadControllers.add(controller);
+
+      btnElement.disabled = true;
+      btnElement.classList.add('opacity-70', 'cursor-wait');
+      progressBox.classList.remove('hidden');
+      progressBar.style.width = "4%";
+      progressLabel.textContent = "Connecting to CDN...";
+
+      cancelBtn.onclick = () => {
+        controller.abort();
+      };
+
+      // Collision-free filename including handle, Tweet ID, multi-video index, and resolution
+      const safeHandle = sanitizeFilenamePart(currentTweetData?.authorHandle, 'user');
+      const safeId = sanitizeFilenamePart(currentTweetData?.id, String(Date.now()));
+      const idxSuffix = (currentTweetData?.videos?.length || 1) > 1 ? `_v${activeVideoIndex + 1}` : '';
+      const filename = `X_${safeHandle}_${safeId}${idxSuffix}_${width}x${height}.mp4`;
+
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const contentLengthHeader = response.headers.get('content-length');
+        const totalBytes = contentLengthHeader ? parseInt(contentLengthHeader, 10) : 0;
+
+        // Immediately sync exact file size onto the button pill if Content-Length is available
+        if (totalBytes > 0 && res && sizeTag) {
+          res.exactBytes = totalBytes;
+          sizeTag.textContent = formatFileSize(totalBytes);
+          sizeTag.title = `Exact file size (${totalBytes.toLocaleString()} bytes)`;
+          sizeTag.classList.remove('hidden', 'animate-pulse');
+        }
+
+        let blob;
+        if (response.body && typeof response.body.getReader === 'function') {
+          const reader = response.body.getReader();
+          const chunks = [];
+          let receivedBytes = 0;
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            chunks.push(value);
+            receivedBytes += value.byteLength;
+
+            if (totalBytes > 0) {
+              const pct = Math.min(100, Math.round((receivedBytes / totalBytes) * 100));
+              progressBar.style.width = `${pct}%`;
+              progressLabel.textContent = `Downloading ${pct}% • ${formatBytesMB(receivedBytes)} / ${formatBytesMB(totalBytes)}`;
+            } else {
+              progressBar.style.width = "65%";
+              progressLabel.textContent = `Downloading... ${formatBytesMB(receivedBytes)}`;
+            }
+          }
+
+          blob = new Blob(chunks, { type: 'video/mp4' });
+        } else {
+          progressLabel.textContent = "Downloading MP4...";
+          blob = await response.blob();
+        }
+
+        // Sync final exact blob size onto the resolution pill
+        if (blob && blob.size > 0 && res && sizeTag) {
+          res.exactBytes = blob.size;
+          sizeTag.textContent = formatFileSize(blob.size);
+          sizeTag.title = `Exact file size (${blob.size.toLocaleString()} bytes)`;
+          sizeTag.classList.remove('hidden', 'animate-pulse');
+        }
+
+        progressBar.style.width = "100%";
+        progressLabel.textContent = "Complete! Saving file...";
+
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+
+        showToast(`Saved ${filename}`);
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          showToast("Download cancelled", true);
+        } else {
+          console.warn("Direct streamed download blocked by CORS, falling back to new tab:", err);
+          const a = document.createElement('a');
+          a.href = url;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          showToast("Opened video in new tab (Right-click → Save Video As)");
+        }
+      } finally {
+        activeDownloadControllers.delete(controller);
+        btnElement.disabled = false;
+        btnElement.classList.remove('opacity-70', 'cursor-wait');
+        setTimeout(() => {
+          progressBox.classList.add('hidden');
+          progressBar.style.width = "0%";
+        }, 700);
+      }
+    }
+
+    async function downloadActiveThumbnail() {
+      const activeVid = currentTweetData?.videos?.[activeVideoIndex];
+      if (!activeVid || !isSafeHttpsUrl(activeVid.thumb)) {
+        showToast("No cover thumbnail available", true);
+        return;
+      }
+
+      const safeHandle = sanitizeFilenamePart(currentTweetData.authorHandle, 'user');
+      const safeId = sanitizeFilenamePart(currentTweetData.id, 'thumb');
+      const filename = `X_${safeHandle}_${safeId}_cover.jpg`;
+
+      try {
+        const res = await fetch(activeVid.thumb);
+        if (!res.ok) throw new Error("CORS blocked");
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+        showToast(`Saved ${filename}`);
+      } catch {
+        window.open(activeVid.thumb, '_blank', 'noopener,noreferrer');
+        showToast("Opened cover thumbnail in new tab");
+      }
+    }
+
+    function copyDirectUrl() {
+      const input = document.getElementById('directUrlInput');
+      if (input.value) {
+        copyToClipboard(input.value);
+        showToast("Direct MP4 stream link copied!");
+      }
+    }
+
+    function stopInlineVideo() {
+      const player = document.getElementById('inlineVideoPlayer');
+      if (player) {
+        player.pause();
+        player.removeAttribute('src');
+        player.removeAttribute('poster');
+        player.load();
+      }
+    }
+
+    /* =========================================================================
+     * LOCAL STORAGE HISTORY (XSS-SAFE DOM RENDERING + PER-ITEM DELETE)
+     * ========================================================================= */
+    function getHistory() {
+      try {
+        const raw = safeStorageGet(STORAGE_KEY_HISTORY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveToHistory(tweetData) {
+      try {
+        let list = getHistory().filter(item => item && item.id !== tweetData.id);
+        list.unshift({
+          id: tweetData.id,
+          authorName: tweetData.authorName,
+          authorHandle: tweetData.authorHandle,
+          avatar: tweetData.avatar,
+          text: tweetData.text,
+          isQuoted: Boolean(tweetData.isQuoted),
+          videos: tweetData.videos,
+          timestamp: Date.now()
+        });
+        if (list.length > 6) list = list.slice(0, 6);
+        safeStorageSet(STORAGE_KEY_HISTORY, JSON.stringify(list));
+        renderHistory();
+      } catch (e) {
+        console.warn("Could not save history:", e);
+      }
+    }
+
+    function removeHistoryItem(tweetId) {
+      const updated = getHistory().filter(item => item.id !== tweetId);
+      safeStorageSet(STORAGE_KEY_HISTORY, JSON.stringify(updated));
+      renderHistory();
+      showToast("Removed from history");
+    }
+
+    function renderHistory() {
+      const list = getHistory();
+      const section = document.getElementById('historySection');
+      const container = document.getElementById('historyList');
+
+      if (!list.length) {
+        section.classList.add('hidden');
+        container.textContent = '';
+        return;
+      }
+
+      container.textContent = '';
+
+      list.forEach(item => {
+        const cardWrapper = document.createElement('div');
+        cardWrapper.className = "flex items-center justify-between gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-xdark border border-gray-200/80 dark:border-xborder hover:border-xblue dark:hover:border-xblue transition group";
+
+        // Main semantic button to re-open a saved extraction
+        const openBtn = document.createElement('button');
+        openBtn.type = "button";
+        openBtn.className = "flex-1 flex items-center justify-between min-w-0 text-left rounded-lg p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue";
+        openBtn.onclick = () => {
+          activeRequestId++;
+          if (activeFetchController) {
+            activeFetchController.abort();
+            activeFetchController = null;
+          }
+          abortSizeProbes();
+          stopInlineVideo();
+          currentTweetData = item;
+          activeVideoIndex = 0;
+          document.getElementById('inputSection').classList.add('hidden');
+          document.getElementById('loadingSection').classList.add('hidden');
+          document.getElementById('errorSection').classList.add('hidden');
+          renderTweetResults();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const infoGroup = document.createElement('div');
+        infoGroup.className = "flex items-center space-x-2.5 min-w-0 pr-2";
+
+        const img = document.createElement('img');
+        img.src = isSafeHttpsUrl(item.avatar) ? item.avatar : DEFAULT_AVATAR_URL;
+        img.alt = "";
+        img.className = "w-8 h-8 rounded-full object-cover bg-gray-200 dark:bg-gray-700 shrink-0";
+        img.onerror = () => {
+          if (img.src !== DEFAULT_AVATAR_URL) img.src = DEFAULT_AVATAR_URL;
+        };
+
+        const textWrap = document.createElement('div');
+        textWrap.className = "min-w-0";
+
+        const handleEl = document.createElement('p');
+        handleEl.className = "text-xs font-bold text-gray-800 dark:text-gray-200 truncate group-hover:text-xblue transition";
+        handleEl.textContent = `@${item.authorHandle || 'user'}`;
+
+        const snippetEl = document.createElement('p');
+        snippetEl.className = "text-[11px] text-gray-500 dark:text-gray-400 truncate";
+        snippetEl.textContent = item.text || 'Video Tweet';
+
+        textWrap.append(handleEl, snippetEl);
+        infoGroup.append(img, textWrap);
+
+        const bestRes = item.videos?.[0]?.resolutions?.slice(-1)[0];
+        const resLabel = bestRes ? `${bestRes.width}×${bestRes.height}` : 'MP4';
+
+        const resBadge = document.createElement('span');
+        resBadge.className = "text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-xblue shrink-0";
+        resBadge.textContent = resLabel;
+
+        openBtn.append(infoGroup, resBadge);
+
+        // Per-item delete button
+        const delBtn = document.createElement('button');
+        delBtn.type = "button";
+        delBtn.title = "Remove from history";
+        delBtn.setAttribute('aria-label', `Remove @${item.authorHandle || 'user'} from history`);
+        delBtn.className = "p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400";
+        delBtn.onclick = () => removeHistoryItem(item.id);
+
+        const delIcon = document.createElement('i');
+        delIcon.className = "fa-solid fa-xmark text-xs";
+        delIcon.setAttribute('aria-hidden', 'true');
+        delBtn.appendChild(delIcon);
+
+        cardWrapper.append(openBtn, delBtn);
+        container.appendChild(cardWrapper);
+      });
+
+      section.classList.remove('hidden');
+    }
+
+    function clearHistory() {
+      safeStorageRemove(STORAGE_KEY_HISTORY);
+      renderHistory();
+      showToast("Download history cleared");
+    }
+
+    /* =========================================================================
+     * NAVIGATION & ERROR HELPERS
+     * ========================================================================= */
+    function showErrorNotice(title, message) {
+      document.getElementById('errorTitle').textContent = title;
+      document.getElementById('errorMessage').textContent = message;
+      document.getElementById('errorSection').classList.remove('hidden');
+    }
+
+    function resetToInput() {
+      activeRequestId++;
+      if (activeFetchController) {
+        activeFetchController.abort();
+        activeFetchController = null;
+      }
+      abortSizeProbes();
+      abortAllDownloads();
+      stopInlineVideo();
+      setMobileMenuOpen(false);
+      document.getElementById('resultSection').classList.add('hidden');
+      document.getElementById('errorSection').classList.add('hidden');
+      document.getElementById('loadingSection').classList.add('hidden');
+      document.getElementById('inputSection').classList.remove('hidden');
+      clearUrlInput();
+    }
+  </script>
+</body>
+</html>
