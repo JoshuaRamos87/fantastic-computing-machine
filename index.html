@@ -351,6 +351,18 @@
 
             <button
               type="button"
+              id="copyPostLinkBtn"
+              onclick="copyTweetUrl()"
+              class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-xdark hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-xborder transition inline-flex items-center space-x-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+              aria-label="Copy X post link"
+              title="Copy original X post link"
+            >
+              <i id="copyPostLinkIcon" class="fa-solid fa-link text-[11px]" aria-hidden="true"></i>
+              <span id="copyPostLinkLabel" class="hidden sm:inline">Copy Link</span>
+            </button>
+
+            <button
+              type="button"
               id="refreshTweetBtn"
               onclick="refreshCurrentTweet()"
               class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-xdark hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-xborder transition inline-flex items-center space-x-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
@@ -3428,6 +3440,33 @@
       if (input.value) {
         const ok = await copyToClipboard(input.value);
         showToast(ok ? "Direct MP4 stream link copied!" : "Copy failed — select and copy manually", !ok);
+      }
+    }
+
+    function getCanonicalTweetUrl() {
+      if (!currentTweetData?.id) return '';
+      const safeHandle = sanitizeFilenamePart(currentTweetData.authorHandle, 'i');
+      const safeId = String(currentTweetData.id).replace(/\D/g, '');
+      return safeId ? `https://x.com/${safeHandle}/status/${safeId}` : '';
+    }
+
+    async function copyTweetUrl() {
+      const tweetUrl = getCanonicalTweetUrl();
+      if (!tweetUrl) return;
+      const ok = await copyToClipboard(tweetUrl);
+      showToast(ok ? "X post link copied!" : "Copy failed — select and copy manually", !ok);
+      if (ok) {
+        const icon = document.getElementById('copyPostLinkIcon');
+        const label = document.getElementById('copyPostLinkLabel');
+        if (icon && label) {
+          icon.className = "fa-solid fa-check text-green-500 text-[11px]";
+          label.textContent = "Copied!";
+          clearTimeout(copyTweetUrl._resetTimer);
+          copyTweetUrl._resetTimer = setTimeout(() => {
+            icon.className = "fa-solid fa-link text-[11px]";
+            label.textContent = "Copy Link";
+          }, 1500);
+        }
       }
     }
 

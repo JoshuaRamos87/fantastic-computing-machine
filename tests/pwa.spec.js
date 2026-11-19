@@ -68,6 +68,26 @@ test.describe('PWA installability, manifest, service worker & share target', () 
     // Query params are cleaned up so reloads don't re-trigger old shares
     const searchAfter = await appPage.evaluate(() => window.location.search);
     expect(searchAfter).toBe('');
+
+    // Copy X Link button copies the clean canonical post URL without ?s=20 tracking params
+    await appPage.evaluate(() => {
+      window.__copiedText = '';
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: {
+          writeText: async (txt) => {
+            window.__copiedText = txt;
+          },
+        },
+      });
+    });
+
+    await expect(appPage.locator('#copyPostLinkBtn')).toBeVisible();
+    await appPage.click('#copyPostLinkBtn');
+    const copied = await appPage.evaluate(() => window.__copiedText);
+    expect(copied).toBe(`https://x.com/testcreator/status/${id}`);
+    await expect(appPage.locator('#copyPostLinkLabel')).toHaveText('Copied!');
+    await expect(appPage.locator('#toastMsg')).toContainText('X post link copied!');
   });
 
   test('reveals Install button on beforeinstallprompt and invokes install prompt on click', async ({ appPage }) => {
