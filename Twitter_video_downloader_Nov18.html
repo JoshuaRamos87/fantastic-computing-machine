@@ -1,9 +1,29 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" id="themeColorMeta" content="#f7f9fa">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Twitter / X Video Downloader Pro</title>
+
+  <!-- Inline SVG Favicon (Zero external requests) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231DA1F2'/%3E%3Cpath d='M32 14v24m0 0l-9-9m9 9l9-9M18 46h28' stroke='%23fff' stroke-width='5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+
+  <!-- Zero-FOUC Theme Init (Runs before first paint) -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('x_downloader_theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var isDark = saved === 'dark' || (!saved && prefersDark);
+        document.documentElement.classList.toggle('dark', isDark);
+        var meta = document.getElementById('themeColorMeta');
+        if (meta) meta.setAttribute('content', isDark ? '#0f1419' : '#f7f9fa');
+      } catch (e) {}
+    })();
+  </script>
 
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,7 +53,7 @@
   </script>
 
   <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body class="min-h-screen flex flex-col font-sans bg-[#f7f9fa] dark:bg-xdark text-gray-800 dark:text-gray-100 transition-colors duration-200 antialiased">
 
@@ -44,20 +64,20 @@
       <button
         type="button"
         onclick="resetToInput()"
-        class="flex items-center space-x-2.5 text-left select-none group rounded-xl p-1 -ml-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+        class="flex items-center space-x-2.5 text-left select-none group rounded-xl p-1 -ml-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue min-w-0"
         aria-label="X Video Downloader Home"
       >
-        <div class="w-9 h-9 rounded-xl bg-black dark:bg-white text-white dark:text-black flex items-center justify-center shadow-sm group-hover:scale-105 transition">
+        <div class="w-9 h-9 rounded-xl bg-black dark:bg-white text-white dark:text-black flex items-center justify-center shadow-sm group-hover:scale-105 transition shrink-0">
           <i class="fa-brands fa-x-twitter text-lg" aria-hidden="true"></i>
         </div>
-        <div>
-          <h1 class="text-base sm:text-lg font-bold tracking-tight leading-none text-gray-900 dark:text-white">X Video Downloader</h1>
-          <span class="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Direct MP4 &amp; HD Extractor</span>
+        <div class="min-w-0">
+          <h1 class="text-base sm:text-lg font-bold tracking-tight leading-none text-gray-900 dark:text-white truncate">X Video Downloader</h1>
+          <span class="text-[11px] text-gray-500 dark:text-gray-400 font-medium block truncate">Direct MP4, GIF &amp; Photo Extractor</span>
         </div>
       </button>
 
       <!-- Header Actions -->
-      <div class="flex items-center space-x-2">
+      <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
         <button
           type="button"
           onclick="loadSampleLink()"
@@ -66,6 +86,28 @@
         >
           <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
           <span>Sample Post</span>
+        </button>
+
+        <!-- Shortcuts / Share Sheet Button -->
+        <button
+          type="button"
+          onclick="openShortcutsModal()"
+          class="p-2.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+          aria-label="Mobile Shortcuts and Bookmarklet"
+          title="Shortcuts &amp; Bookmarklet"
+        >
+          <i class="fa-solid fa-bookmark text-sm" aria-hidden="true"></i>
+        </button>
+
+        <!-- Settings Button -->
+        <button
+          type="button"
+          onclick="openSettingsModal()"
+          class="p-2.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+          aria-label="Downloader Settings"
+          title="Settings &amp; Filename Template"
+        >
+          <i class="fa-solid fa-gear text-sm" aria-hidden="true"></i>
         </button>
 
         <!-- Dark Mode Toggle -->
@@ -112,6 +154,18 @@
         </button>
       </li>
       <li>
+        <button type="button" onclick="openShortcutsModal()" class="w-full text-left py-2 px-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-xblue font-medium flex items-center transition">
+          <i class="fa-solid fa-bookmark w-6 text-amber-500" aria-hidden="true"></i>
+          <span>Shortcuts &amp; Bookmarklet</span>
+        </button>
+      </li>
+      <li>
+        <button type="button" onclick="openSettingsModal()" class="w-full text-left py-2 px-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-xblue font-medium flex items-center transition">
+          <i class="fa-solid fa-gear w-6 text-gray-400" aria-hidden="true"></i>
+          <span>Settings &amp; Filenames</span>
+        </button>
+      </li>
+      <li>
         <a href="https://x.com" target="_blank" rel="noopener noreferrer" class="w-full py-2 px-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-xblue font-medium flex items-center transition">
           <i class="fa-brands fa-x-twitter w-6 text-gray-400" aria-hidden="true"></i>
           <span>Open X / Twitter</span>
@@ -120,12 +174,13 @@
     </ul>
   </nav>
 
-  <!-- Accessible Live Toast Notification -->
+  <!-- Accessible Live Toast Notification (Always mounted for reliable screen-reader aria-live announcements) -->
   <div
     id="toast"
     role="status"
     aria-live="polite"
-    class="fixed top-20 left-1/2 -translate-x-1/2 z-50 hidden bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2.5 rounded-full text-xs sm:text-sm font-medium shadow-xl flex items-center space-x-2.5 transition-all duration-300 pointer-events-none border border-gray-700 dark:border-gray-200 max-w-[92vw]"
+    aria-atomic="true"
+    class="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2.5 rounded-full text-xs sm:text-sm font-medium shadow-xl flex items-center space-x-2.5 transition-all duration-200 pointer-events-none border border-gray-700 dark:border-gray-200 max-w-[92vw] opacity-0 -translate-y-2 invisible"
   >
     <i class="fa-solid fa-circle-check text-green-400 dark:text-green-600 shrink-0" id="toastIcon" aria-hidden="true"></i>
     <span id="toastMsg" class="truncate">Action completed successfully</span>
@@ -136,13 +191,13 @@
 
     <!-- SECTION 1: URL Input Card -->
     <section id="inputSection" class="bg-white dark:bg-xcard rounded-2xl shadow-sm border border-gray-200 dark:border-xborder p-5 sm:p-8 transition-colors">
-      <div class="text-center mb-6">
+      <div class="text-center mb-5">
         <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-xblue mb-3 shadow-inner">
           <i class="fa-solid fa-cloud-arrow-down text-2xl" aria-hidden="true"></i>
         </div>
-        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Download Twitter / X Video</h2>
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Download Twitter / X Media</h2>
         <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Paste any public X link, mobile share text, quoted post, or Tweet ID
+          Paste any public X link, mobile share text, quoted post, photo post, or Tweet ID
         </p>
       </div>
 
@@ -152,7 +207,7 @@
             <i id="inputStatusIcon" class="fa-solid fa-link text-sm transition-colors" aria-hidden="true"></i>
           </div>
 
-          <!-- Using type="text" with inputmode="url" accepts messy mobile share text & raw Tweet IDs -->
+          <!-- text-base sm:text-sm prevents iOS Safari auto-zoom on focus -->
           <input
             type="text"
             inputmode="url"
@@ -164,7 +219,7 @@
             aria-label="X or Twitter Post Link or ID"
             oninput="handleUrlInputChange(this.value)"
             onpaste="handleNativePaste(event)"
-            class="w-full pl-10 pr-28 py-3.5 bg-gray-50 dark:bg-xdark border border-gray-300 dark:border-xborder rounded-xl focus:ring-2 focus:ring-xblue focus:border-xblue focus:bg-white dark:focus:bg-xdark outline-none text-sm text-gray-900 dark:text-white transition"
+            class="w-full pl-10 pr-28 py-3.5 bg-gray-50 dark:bg-xdark border border-gray-300 dark:border-xborder rounded-xl focus:ring-2 focus:ring-xblue focus:border-xblue focus:bg-white dark:focus:bg-xdark outline-none text-base sm:text-sm text-gray-900 dark:text-white transition"
           />
 
           <div class="absolute right-2 flex items-center space-x-1">
@@ -198,7 +253,7 @@
           id="fetchBtn"
           class="w-full bg-xblue hover:bg-xbluehover active:scale-[0.99] text-white font-bold py-3.5 rounded-xl shadow-sm hover:shadow-md flex items-center justify-center space-x-2 text-sm sm:text-base transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-xblue"
         >
-          <span>Extract Video Qualities</span>
+          <span>Extract Video &amp; Media</span>
           <i class="fa-solid fa-bolt text-xs" aria-hidden="true"></i>
         </button>
       </form>
@@ -206,9 +261,9 @@
       <!-- Feature Highlights & Working Example -->
       <div class="mt-6 pt-5 border-t border-gray-100 dark:border-xborder flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          <span class="flex items-center space-x-1"><i class="fa-solid fa-check text-green-500" aria-hidden="true"></i><span>Live Progress Save</span></span>
-          <span class="flex items-center space-x-1"><i class="fa-solid fa-check text-green-500" aria-hidden="true"></i><span>File Sizes</span></span>
-          <span class="flex items-center space-x-1"><i class="fa-solid fa-check text-green-500" aria-hidden="true"></i><span>Quoted Posts &amp; GIFs</span></span>
+          <span class="flex items-center space-x-1"><i class="fa-solid fa-check text-green-500" aria-hidden="true"></i><span>Live Speed &amp; Disk Stream</span></span>
+          <span class="flex items-center space-x-1"><i class="fa-solid fa-check text-green-500" aria-hidden="true"></i><span>Real .GIF &amp; Photos</span></span>
+          <span class="flex items-center space-x-1"><i class="fa-solid fa-check text-green-500" aria-hidden="true"></i><span>Quoted Posts &amp; File Sizes</span></span>
         </div>
         <button
           type="button"
@@ -263,51 +318,102 @@
     <section id="resultSection" class="hidden w-full bg-white dark:bg-xcard rounded-2xl shadow-sm border border-gray-200 dark:border-xborder overflow-hidden transition-colors">
 
       <!-- Tweet Context Header -->
-      <div class="p-4 sm:px-6 border-b border-gray-100 dark:border-xborder flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center space-x-3 min-w-0 flex-1">
-          <img
-            id="authorAvatar"
-            src=""
-            alt="Author Avatar"
-            class="w-10 h-10 rounded-full object-cover bg-gray-200 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 shrink-0"
-          />
-          <div class="min-w-0">
-            <div class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-              <h3 id="tweetAuthorName" class="font-bold text-sm text-gray-900 dark:text-white leading-tight truncate">Author</h3>
-              <span id="tweetAuthorHandle" class="text-xs text-gray-500 dark:text-gray-400 truncate">@handle</span>
-              <span id="quotedBadge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
-                From Quoted Post
-              </span>
+      <div class="p-4 sm:px-6 border-b border-gray-100 dark:border-xborder space-y-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center space-x-3 min-w-0 flex-1">
+            <img
+              id="authorAvatar"
+              src=""
+              alt="Author Avatar"
+              class="w-10 h-10 rounded-full object-cover bg-gray-200 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 shrink-0"
+            />
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                <h3 id="tweetAuthorName" class="font-bold text-sm text-gray-900 dark:text-white leading-tight truncate">Author</h3>
+                <span id="tweetAuthorHandle" class="text-xs text-gray-500 dark:text-gray-400 truncate">@handle</span>
+                <span id="quotedBadge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
+                  From Quoted Post
+                </span>
+              </div>
+              <p id="tweetSnippet" class="text-xs text-gray-600 dark:text-gray-300 truncate max-w-md mt-0.5"></p>
             </div>
-            <p id="tweetSnippet" class="text-xs text-gray-600 dark:text-gray-300 truncate max-w-md mt-0.5"></p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              id="copyCaptionBtn"
+              onclick="copyTweetCaption()"
+              class="hidden px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-xdark hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-xborder transition inline-flex items-center space-x-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+              title="Copy post caption text"
+            >
+              <i class="fa-regular fa-comment-dots text-[11px]" aria-hidden="true"></i>
+              <span class="hidden sm:inline">Copy Text</span>
+            </button>
+
+            <button
+              type="button"
+              id="refreshTweetBtn"
+              onclick="refreshCurrentTweet()"
+              class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-xdark hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-xborder transition inline-flex items-center space-x-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+              title="Re-fetch fresh CDN links for this post"
+            >
+              <i id="refreshTweetIcon" class="fa-solid fa-arrows-rotate text-[11px]" aria-hidden="true"></i>
+              <span class="hidden sm:inline">Refresh</span>
+            </button>
+
+            <a
+              id="viewOnXLink"
+              href="https://x.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-xdark hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-xborder transition inline-flex items-center space-x-1"
+              title="Open original post on X"
+            >
+              <i class="fa-brands fa-x-twitter text-[11px]" aria-hidden="true"></i>
+              <span class="hidden sm:inline">View Post</span>
+            </a>
+
+            <span id="foundCountBadge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 dark:bg-green-950/60 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/50">
+              1 Video Ready
+            </span>
           </div>
         </div>
 
-        <div class="flex items-center space-x-2 shrink-0">
-          <a
-            id="viewOnXLink"
-            href="https://x.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-xdark hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-xborder transition inline-flex items-center space-x-1"
-            title="Open original post on X"
-          >
-            <i class="fa-brands fa-x-twitter text-[11px]" aria-hidden="true"></i>
-            <span class="hidden sm:inline">View Post</span>
-          </a>
-
-          <span id="foundCountBadge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 dark:bg-green-950/60 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/50">
-            1 Video Ready
+        <!-- Active Background Downloads Banner -->
+        <div id="activeDownloadsBanner" class="hidden flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 text-xs text-xblue">
+          <span class="flex items-center space-x-2 font-medium">
+            <i class="fa-solid fa-spinner fa-spin text-[11px]" aria-hidden="true"></i>
+            <span id="activeDownloadsText">1 download active</span>
           </span>
+          <button
+            type="button"
+            onclick="abortAllDownloadsWithToast()"
+            class="text-red-500 hover:underline font-semibold shrink-0"
+          >
+            Cancel All
+          </button>
         </div>
       </div>
 
-      <!-- Multi-Video Switcher Tabs -->
-      <div id="multiVideoTabs" class="hidden bg-gray-50 dark:bg-xdark px-4 py-2 border-b border-gray-200 dark:border-xborder flex items-center space-x-2 overflow-x-auto">
-        <!-- Populated dynamically via safe DOM nodes -->
+      <!-- Multi-Video Switcher Tabs + Download All -->
+      <div id="multiVideoBar" class="hidden bg-gray-50 dark:bg-xdark px-4 py-2 border-b border-gray-200 dark:border-xborder flex items-center justify-between gap-2">
+        <div id="multiVideoTabs" role="tablist" aria-label="Media items in this post" class="flex items-center space-x-2 overflow-x-auto py-0.5">
+          <!-- Populated dynamically via safe DOM nodes -->
+        </div>
+        <button
+          type="button"
+          id="downloadAllVideosBtn"
+          onclick="downloadAllVideos()"
+          class="px-3 py-1.5 rounded-lg bg-xblue hover:bg-xbluehover text-white text-xs font-semibold transition inline-flex items-center space-x-1.5 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+          title="Download highest quality of all videos in this post"
+        >
+          <i class="fa-solid fa-download text-[11px]" aria-hidden="true"></i>
+          <span>Download All</span>
+        </button>
       </div>
 
-      <!-- Main Results Body (Adapts for Portrait vs. Landscape Videos) -->
+      <!-- Main Results Body (Adapts for Portrait vs. Landscape Videos, HLS, or Photo Gallery) -->
       <div class="p-5 sm:p-6">
         <div id="resultsLayoutGrid" class="flex flex-col md:flex-row gap-6 items-center md:items-start">
 
@@ -321,6 +427,19 @@
                 preload="metadata"
                 class="w-full max-h-[340px] object-contain bg-black"
               ></video>
+
+              <!-- Player Error Overlay (Shown when video streams fail to play) -->
+              <div id="playerErrorOverlay" class="hidden absolute inset-0 bg-gray-900/95 text-white flex flex-col items-center justify-center p-4 text-center space-y-2.5">
+                <i class="fa-solid fa-video-slash text-2xl text-amber-400" aria-hidden="true"></i>
+                <p id="playerErrorText" class="text-xs text-gray-200 leading-relaxed">Preview stream could not load in the inline player.</p>
+                <button
+                  type="button"
+                  onclick="refreshCurrentTweet()"
+                  class="px-3 py-1.5 rounded-lg bg-xblue hover:bg-xbluehover text-white text-xs font-semibold transition"
+                >
+                  Refresh Post
+                </button>
+              </div>
 
               <!-- Overlay Badges (GIF / Duration) -->
               <div class="absolute top-2 left-2 flex items-center space-x-1.5 pointer-events-none">
@@ -355,7 +474,7 @@
 
           <!-- Download Action List Column -->
           <div id="actionsColumn" class="w-full md:w-7/12 flex flex-col justify-between space-y-4">
-            <div>
+            <div id="mp4FormatsContainer">
               <div class="flex items-center justify-between mb-2.5">
                 <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Available MP4 Formats</span>
                 <span class="text-[11px] text-gray-400">Size shown per quality</span>
@@ -367,8 +486,91 @@
               </div>
             </div>
 
+            <!-- HLS-Only (.m3u8) Stream Fallback Notice -->
+            <div id="hlsStreamContainer" class="hidden rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/70 dark:bg-amber-950/30 p-4 space-y-3">
+              <div class="flex items-start space-x-2.5">
+                <i class="fa-solid fa-tower-broadcast text-amber-500 mt-0.5 shrink-0" aria-hidden="true"></i>
+                <div class="space-y-1">
+                  <h4 class="text-xs font-bold text-gray-900 dark:text-white">Adaptive HLS (.m3u8) Stream Only</h4>
+                  <p class="text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed">
+                    X only returned an <code class="font-mono">.m3u8</code> playlist for this broadcast or long video (no direct <code class="font-mono">.mp4</code> file). On iPhone/Safari you can stream it directly, or save via <code class="font-mono">ffmpeg</code> / <code class="font-mono">yt-dlp</code>.
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                <a
+                  id="hlsOpenLink"
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="px-3 py-2 rounded-lg bg-xblue hover:bg-xbluehover text-white text-xs font-semibold inline-flex items-center space-x-1.5 transition"
+                >
+                  <i class="fa-solid fa-play text-[10px]" aria-hidden="true"></i>
+                  <span>Open Stream</span>
+                </a>
+                <button
+                  type="button"
+                  onclick="copyHlsUrl()"
+                  class="px-3 py-2 rounded-lg bg-white dark:bg-xcard border border-gray-200 dark:border-xborder hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-800 dark:text-gray-200 text-xs font-semibold inline-flex items-center space-x-1.5 transition"
+                >
+                  <i class="fa-regular fa-copy text-[11px]" aria-hidden="true"></i>
+                  <span>Copy .m3u8 URL</span>
+                </button>
+                <button
+                  type="button"
+                  onclick="copyFfmpegCommand()"
+                  class="px-3 py-2 rounded-lg bg-white dark:bg-xcard border border-gray-200 dark:border-xborder hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-800 dark:text-gray-200 text-xs font-semibold inline-flex items-center space-x-1.5 transition"
+                >
+                  <i class="fa-solid fa-terminal text-[11px]" aria-hidden="true"></i>
+                  <span>Copy ffmpeg</span>
+                </button>
+                <button
+                  type="button"
+                  onclick="copyYtdlpCommand()"
+                  class="px-3 py-2 rounded-lg bg-white dark:bg-xcard border border-gray-200 dark:border-xborder hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-800 dark:text-gray-200 text-xs font-semibold inline-flex items-center space-x-1.5 transition"
+                >
+                  <i class="fa-solid fa-terminal text-[11px]" aria-hidden="true"></i>
+                  <span>Copy yt-dlp</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Real .GIF Client-Side Exporter Container -->
+            <div id="gifExportContainer" class="hidden pt-2 border-t border-gray-100 dark:border-xborder space-y-2">
+              <button
+                type="button"
+                id="exportGifBtn"
+                onclick="exportVideoAsGif()"
+                class="w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm flex items-center justify-between transition shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+              >
+                <span class="flex items-center space-x-2">
+                  <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                  <span>Export Real Animated .GIF</span>
+                </span>
+                <span class="text-[10px] font-mono bg-white/20 px-2 py-0.5 rounded">Client-Side</span>
+              </button>
+
+              <div id="gifExportProgressBox" class="hidden bg-gray-50 dark:bg-xdark border border-gray-200 dark:border-xborder rounded-xl p-2.5 space-y-1.5">
+                <div class="flex items-center justify-between text-[11px] text-gray-600 dark:text-gray-300 font-medium">
+                  <span id="gifExportLabel" class="font-mono truncate">Preparing GIF...</span>
+                  <button
+                    type="button"
+                    id="gifExportCancelBtn"
+                    onclick="cancelGifExport()"
+                    class="text-red-500 hover:underline font-semibold ml-2 shrink-0"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                  <div id="gifExportBar" class="h-full bg-purple-600 rounded-full transition-all duration-150" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
             <!-- Direct MP4 URL Box -->
-            <div class="pt-4 border-t border-gray-100 dark:border-xborder">
+            <div id="directStreamBox" class="pt-4 border-t border-gray-100 dark:border-xborder">
               <div class="flex items-center justify-between mb-1.5">
                 <label for="directUrlInput" class="block text-xs font-semibold text-gray-500 dark:text-gray-400">
                   Direct CDN Stream Link (Highest Quality):
@@ -398,6 +600,28 @@
           </div>
 
         </div>
+
+        <!-- Photo Gallery Fallback Container (for Photo-Only Posts) -->
+        <div id="photoGalleryContainer" class="hidden space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center space-x-2">
+              <i class="fa-regular fa-images text-xblue" aria-hidden="true"></i>
+              <h4 id="photoCountHeader" class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Photos Found</h4>
+            </div>
+            <button
+              type="button"
+              id="saveAllPhotosBtn"
+              onclick="downloadAllPhotos()"
+              class="px-3 py-1.5 rounded-xl bg-xblue hover:bg-xbluehover text-white text-xs font-semibold transition inline-flex items-center space-x-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+            >
+              <i class="fa-solid fa-download text-[11px]" aria-hidden="true"></i>
+              <span>Save All Photos</span>
+            </button>
+          </div>
+          <div id="photoGalleryGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Populated safely via DOM nodes -->
+          </div>
+        </div>
       </div>
 
       <!-- Action Footer -->
@@ -408,7 +632,7 @@
           class="w-full py-2.5 bg-gray-900 hover:bg-black dark:bg-white dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold rounded-xl text-xs sm:text-sm tracking-wide transition flex items-center justify-center space-x-2 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
         >
           <i class="fa-solid fa-rotate-left text-xs" aria-hidden="true"></i>
-          <span>Extract Another Video</span>
+          <span>Extract Another Post</span>
           <span class="hidden sm:inline text-[10px] opacity-60 font-mono ml-1">(Esc)</span>
         </button>
       </div>
@@ -416,14 +640,23 @@
 
     <!-- SECTION 4: Error State Notice -->
     <section id="errorSection" role="alert" class="hidden w-full bg-white dark:bg-xcard rounded-2xl p-6 border border-red-200 dark:border-red-900/50 shadow-sm text-center">
-      <div class="w-12 h-12 rounded-full bg-red-50 dark:bg-red-950/60 text-red-500 flex items-center justify-center mx-auto mb-3">
-        <i class="fa-solid fa-triangle-exclamation text-xl" aria-hidden="true"></i>
+      <div id="errorIconWrap" class="w-12 h-12 rounded-full bg-red-50 dark:bg-red-950/60 text-red-500 flex items-center justify-center mx-auto mb-3">
+        <i id="errorIcon" class="fa-solid fa-triangle-exclamation text-xl" aria-hidden="true"></i>
       </div>
-      <h3 class="text-base font-bold text-gray-900 dark:text-white" id="errorTitle">No Video Found</h3>
+      <h3 class="text-base font-bold text-gray-900 dark:text-white" id="errorTitle">No Media Found</h3>
       <p class="text-xs text-gray-600 dark:text-gray-400 mt-1.5 max-w-md mx-auto leading-relaxed" id="errorMessage">
-        We could not find any playable MP4 video in the provided post. Please make sure the post is public and contains a video or GIF.
+        We could not find any playable MP4 video in the provided post. Please make sure the post is public and contains a video, GIF, or photo.
       </p>
-      <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+        <button
+          type="button"
+          id="errorRetryBtn"
+          onclick="retryLastExtraction()"
+          class="px-5 py-2.5 bg-xblue hover:bg-xbluehover text-white text-xs font-semibold rounded-xl transition inline-flex items-center space-x-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue"
+        >
+          <i class="fa-solid fa-rotate-right text-[11px]" aria-hidden="true"></i>
+          <span>Retry</span>
+        </button>
         <button
           type="button"
           onclick="resetToInput()"
@@ -442,11 +675,12 @@
     </section>
 
     <!-- SECTION 5: Recent Extractions History (Local Storage) -->
-    <section id="historySection" class="hidden bg-white dark:bg-xcard rounded-2xl shadow-sm border border-gray-200 dark:border-xborder p-5 transition-colors">
-      <div class="flex items-center justify-between mb-3.5">
+    <section id="historySection" class="hidden bg-white dark:bg-xcard rounded-2xl shadow-sm border border-gray-200 dark:border-xborder p-5 transition-colors space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center space-x-2">
           <i class="fa-solid fa-clock-rotate-left text-xblue text-xs" aria-hidden="true"></i>
           <h3 class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Recent Extractions</h3>
+          <span id="historyCountBadge" class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">0</span>
         </div>
         <button
           type="button"
@@ -456,6 +690,19 @@
           Clear All
         </button>
       </div>
+
+      <div id="historySearchWrap" class="hidden relative">
+        <i class="fa-solid fa-magnifying-glass text-xs text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true"></i>
+        <input
+          type="search"
+          id="historySearchInput"
+          oninput="renderHistory()"
+          placeholder="Filter history by @handle or caption..."
+          aria-label="Filter recent extractions"
+          class="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-xdark border border-gray-200 dark:border-xborder rounded-xl text-base sm:text-xs text-gray-800 dark:text-gray-200 outline-none focus:ring-2 focus:ring-xblue transition"
+        />
+      </div>
+
       <div id="historyList" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         <!-- Populated securely via DOM nodes -->
       </div>
@@ -466,59 +713,259 @@
   <!-- Footer -->
   <footer class="bg-white dark:bg-xcard border-t border-gray-200 dark:border-xborder py-4 px-4 text-center text-xs text-gray-500 dark:text-gray-400 mt-auto transition-colors">
     <div class="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-      <p class="font-medium">X Video Downloader Pro &bull; Client-Side MP4 Extractor</p>
-      <p class="text-[11px] text-gray-400">Videos stream directly from Twitter / X CDN servers</p>
+      <p class="font-medium">X Video Downloader Pro &bull; Single-File Media Extractor</p>
+      <p class="text-[11px] text-gray-400">Videos &amp; photos load directly from Twitter / X CDN servers</p>
     </div>
   </footer>
+
+  <!-- Settings Modal -->
+  <div
+    id="settingsModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="settingsModalTitle"
+    onclick="if (event.target === this) closeSettingsModal()"
+    class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+  >
+    <div class="bg-white dark:bg-xcard border border-gray-200 dark:border-xborder rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-gray-100 dark:border-xborder pb-3">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-gear text-xblue" aria-hidden="true"></i>
+          <h3 id="settingsModalTitle" class="text-base font-bold text-gray-900 dark:text-white">Downloader Settings</h3>
+        </div>
+        <button
+          type="button"
+          onclick="closeSettingsModal()"
+          aria-label="Close settings"
+          class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+        >
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Filename Template -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label for="filenameTemplateInput" class="text-xs font-semibold text-gray-700 dark:text-gray-200">Filename Template</label>
+            <button
+              type="button"
+              onclick="resetFilenameTemplate()"
+              class="text-[11px] text-xblue hover:underline font-medium"
+            >
+              Reset Default
+            </button>
+          </div>
+          <input
+            type="text"
+            id="filenameTemplateInput"
+            oninput="updateFilenamePreview()"
+            class="w-full px-3 py-2 bg-gray-50 dark:bg-xdark border border-gray-300 dark:border-xborder rounded-xl text-base sm:text-xs font-mono text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-xblue"
+          />
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            <button type="button" onclick="insertTemplateToken('{handle}')" class="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[11px] font-mono text-gray-700 dark:text-gray-300">{handle}</button>
+            <button type="button" onclick="insertTemplateToken('{id}')" class="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[11px] font-mono text-gray-700 dark:text-gray-300">{id}</button>
+            <button type="button" onclick="insertTemplateToken('{res}')" class="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[11px] font-mono text-gray-700 dark:text-gray-300">{res}</button>
+            <button type="button" onclick="insertTemplateToken('{index}')" class="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[11px] font-mono text-gray-700 dark:text-gray-300">{index}</button>
+            <button type="button" onclick="insertTemplateToken('{date}')" class="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[11px] font-mono text-gray-700 dark:text-gray-300">{date}</button>
+          </div>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400">
+            Preview: <code id="filenamePreviewText" class="font-mono text-xblue break-all">X_elonmusk_123456_1080x1920.mp4</code>
+          </p>
+        </div>
+
+        <!-- Behavior Toggles -->
+        <div class="space-y-2.5 pt-2 border-t border-gray-100 dark:border-xborder">
+          <label class="flex items-start space-x-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              id="settingAutoPaste"
+              onchange="saveSettingsFromUI()"
+              class="mt-0.5 w-4 h-4 rounded text-xblue focus:ring-xblue border-gray-300 dark:border-xborder"
+            />
+            <span class="text-xs text-gray-700 dark:text-gray-300">
+              <strong class="block font-semibold">Auto-extract immediately on paste</strong>
+              <span class="text-[11px] text-gray-500 dark:text-gray-400">Automatically fetch when pasting a single valid link</span>
+            </span>
+          </label>
+
+          <label id="settingSavePickerRow" class="hidden flex items-start space-x-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              id="settingSavePicker"
+              onchange="saveSettingsFromUI()"
+              class="mt-0.5 w-4 h-4 rounded text-xblue focus:ring-xblue border-gray-300 dark:border-xborder"
+            />
+            <span class="text-xs text-gray-700 dark:text-gray-300">
+              <strong class="block font-semibold">Always stream directly to disk ("Save As")</strong>
+              <span class="text-[11px] text-gray-500 dark:text-gray-400">Files &ge; 80 MB always stream to disk automatically when supported</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button
+          type="button"
+          onclick="closeSettingsModal()"
+          class="px-4 py-2 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-semibold hover:opacity-90 transition"
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shortcuts & Bookmarklet Modal -->
+  <div
+    id="shortcutsModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="shortcutsModalTitle"
+    onclick="if (event.target === this) closeShortcutsModal()"
+    class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+  >
+    <div class="bg-white dark:bg-xcard border border-gray-200 dark:border-xborder rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-gray-100 dark:border-xborder pb-3">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-bookmark text-amber-500" aria-hidden="true"></i>
+          <h3 id="shortcutsModalTitle" class="text-base font-bold text-gray-900 dark:text-white">Shortcuts &amp; Bookmarklet</h3>
+        </div>
+        <button
+          type="button"
+          onclick="closeShortcutsModal()"
+          aria-label="Close shortcuts dialog"
+          class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+        >
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+          Launch this downloader directly with any X post pre-loaded using the <code class="font-mono text-xblue">?url=</code> query parameter.
+        </p>
+
+        <!-- Mobile URL Template -->
+        <div class="space-y-1.5">
+          <label for="shortcutUrlTemplate" class="font-semibold text-gray-700 dark:text-gray-200 block">iOS Shortcuts / Android Share URL Template</label>
+          <div class="flex items-center space-x-2 bg-gray-50 dark:bg-xdark p-1.5 rounded-xl border border-gray-200 dark:border-xborder">
+            <input type="text" id="shortcutUrlTemplate" readonly class="w-full bg-transparent text-xs font-mono text-gray-700 dark:text-gray-300 outline-none px-2 truncate" />
+            <button type="button" onclick="copyShortcutTemplate()" class="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 font-semibold text-gray-800 dark:text-gray-200 shrink-0">Copy</button>
+          </div>
+        </div>
+
+        <!-- Desktop Bookmarklet -->
+        <div class="space-y-1.5">
+          <label for="bookmarkletCodeInput" class="font-semibold text-gray-700 dark:text-gray-200 block">Desktop Browser Bookmarklet</label>
+          <div class="flex items-center space-x-2 bg-gray-50 dark:bg-xdark p-1.5 rounded-xl border border-gray-200 dark:border-xborder">
+            <input type="text" id="bookmarkletCodeInput" readonly class="w-full bg-transparent text-xs font-mono text-gray-700 dark:text-gray-300 outline-none px-2 truncate" />
+            <button type="button" onclick="copyBookmarkletCode()" class="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 font-semibold text-gray-800 dark:text-gray-200 shrink-0">Copy</button>
+          </div>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400">Create a bookmark with this code as its URL, then click it while viewing any post on X.</p>
+        </div>
+
+        <div id="fileProtocolShortcutNote" class="hidden rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 p-3 text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
+          <strong>Local File Tip:</strong> You opened this page via <code class="font-mono">file://</code>. Most browsers block <code class="font-mono">https://x.com</code> bookmarklets from navigating to <code class="font-mono">file://</code> URLs; copy links into this tab or host the single HTML file on any static HTTPS page for one-tap bookmarklets.
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button
+          type="button"
+          onclick="closeShortcutsModal()"
+          class="px-4 py-2 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-semibold hover:opacity-90 transition"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script>
     /* =========================================================================
      * CONSTANTS & APPLICATION STATE
      * ========================================================================= */
-    const DEFAULT_AVATAR_URL = "https://placehold.co/80x80/1DA1F2/ffffff?text=X";
+    const DEFAULT_AVATAR_URL = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="40" fill="#1DA1F2"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="system-ui,-apple-system,sans-serif" font-size="34" font-weight="700">X</text></svg>'
+    );
+    const SAMPLE_TWEET_ID = "2073996017884627428";
     const SAMPLE_LINK = "https://x.com/MinendTL/status/2073996017884627428?s=20";
 
-    // Fixed fallback data: thumb is omitted (instead of an .mp4) so the video element renders its first frame cleanly
+    // Fixed fallback data: thumb is omitted so the video element renders its first frame cleanly
     const SAMPLE_FALLBACK = {
-      id: "2073996017884627428",
+      id: SAMPLE_TWEET_ID,
       authorName: "Minend",
       authorHandle: "MinendTL",
       avatar: DEFAULT_AVATAR_URL,
       text: "Sample high-definition vertical video post for testing multi-resolution MP4 extraction.",
       isQuoted: false,
+      mediaKind: "video",
+      isSampleFallback: true,
+      photos: [],
       videos: [
         {
           type: "video",
+          isHlsOnly: false,
+          hlsUrl: "",
           thumb: "",
           duration: 18,
+          width: 1080,
+          height: 1920,
           resolutions: [
-            { width: 320, height: 568, bitrate: 632000, url: "https://video.twimg.com/amplify_video/2073992784671862784/vid/avc1/320x568/0BoHnK8RdxYlmCtr.mp4" },
-            { width: 480, height: 852, bitrate: 950000, url: "https://video.twimg.com/amplify_video/2073992784671862784/vid/avc1/480x852/0BoHnK8RdxYlmCtr.mp4" },
-            { width: 720, height: 1280, bitrate: 2176000, url: "https://video.twimg.com/amplify_video/2073992784671862784/vid/avc1/720x1280/0BoHnK8RdxYlmCtr.mp4" },
-            { width: 1080, height: 1920, bitrate: 5000000, url: "https://video.twimg.com/amplify_video/2073992784671862784/vid/avc1/1080x1920/0BoHnK8RdxYlmCtr.mp4" }
+            { width: 320, height: 568, bitrate: 632000, exactBytes: 0, hasExplicitDims: true, url: "https://video.twimg.com/amplify_video/2073992784671862784/vid/avc1/320x568/0BoHnK8RdxYlmCtr.mp4" },
+            { width: 480, height: 852, bitrate: 950000, exactBytes: 0, hasExplicitDims: true, url: "https://video.twimg.com/amplify_video/2073992784671862784/vid/avc1/480x852/0BoHnK8RdxYlmCtr.mp4" },
+            { width: 720, height: 1280, bitrate: 2176000, exactBytes: 0, hasExplicitDims: true, url: "https://video.twimg.com/amplify_video/2073992784671862784/vid/avc1/720x1280/0BoHnK8RdxYlmCtr.mp4" },
+            { width: 1080, height: 1920, bitrate: 5000000, exactBytes: 0, hasExplicitDims: true, url: "https://video.twimg.com/amplify_video/2073992784671862784/vid/avc1/1080x1920/0BoHnK8RdxYlmCtr.mp4" }
           ]
         }
       ]
     };
 
-    const STORAGE_KEY_HISTORY = "x_downloader_history_v2";
+    const STORAGE_KEY_HISTORY = "x_downloader_history_v3";
+    const LEGACY_STORAGE_KEY_HISTORY = "x_downloader_history_v2";
+    const STORAGE_KEY_SETTINGS = "x_downloader_settings_v1";
     const STORAGE_KEY_THEME = "x_downloader_theme";
-    const API_TIMEOUT_MS = 8500;
 
+    const DEFAULT_SETTINGS = {
+      filenameTemplate: "X_{handle}_{id}{index}_{res}",
+      autoPaste: true,
+      preferSavePicker: false
+    };
+
+    const API_TIMEOUT_MS = 8500;
+    const STALL_TIMEOUT_MS = 30000;
+    const LARGE_FILE_PICKER_THRESHOLD = 80 * 1024 * 1024;
+    const MOBILE_MEMORY_WARN_THRESHOLD = 150 * 1024 * 1024;
+    const MAX_HISTORY_ITEMS = 25;
+
+    let appSettings = { ...DEFAULT_SETTINGS };
     let currentTweetData = null;
     let activeVideoIndex = 0;
+    let lastExtractedInput = "";
+    let lastEscapeWarnAt = 0;
 
     // Race-condition & cancellation state
     let activeRequestId = 0;
     let activeFetchController = null;
     let sizeProbeController = null;
-    const activeDownloadControllers = new Set();
+    const activeDownloads = new Map();
+    const completedDownloadKeys = new Set();
+
+    // Preview error fallback state
+    let previewCandidateUrls = [];
+    let previewCandidateIndex = 0;
+
+    // GIF export state
+    let gifExportController = null;
 
     /* =========================================================================
      * INITIALIZATION & KEYBOARD SHORTCUTS
      * ========================================================================= */
     window.addEventListener('DOMContentLoaded', () => {
+      loadSettings();
       initTheme();
+      migrateLegacyHistory();
       renderHistory();
 
       // Safe avatar fallback handler
@@ -528,6 +975,27 @@
           avatarEl.src = DEFAULT_AVATAR_URL;
         }
       });
+
+      // Resilient inline player error handler with automatic variant failover
+      const player = document.getElementById('inlineVideoPlayer');
+      player.addEventListener('error', () => {
+        if (!player.getAttribute('src')) return;
+        previewCandidateIndex++;
+        if (previewCandidateIndex < previewCandidateUrls.length) {
+          const next = previewCandidateUrls[previewCandidateIndex];
+          player.src = next.url;
+          document.getElementById('previewQualityHint').textContent = `Preview (${next.width}×${next.height})`;
+          return;
+        }
+        document.getElementById('playerErrorText').textContent =
+          "Preview stream failed to load (CDN link may have expired or is blocked).";
+        document.getElementById('playerErrorOverlay').classList.remove('hidden');
+      });
+
+      // Show File System Access setting only when supported by the browser
+      if (typeof window.showSaveFilePicker === 'function') {
+        document.getElementById('settingSavePickerRow').classList.remove('hidden');
+      }
 
       // Check for ?url=... query parameter for bookmarklets & mobile shortcuts
       try {
@@ -547,23 +1015,51 @@
       document.getElementById('urlInput').focus();
     });
 
-    // Global Escape key resets from Result / Error / Loading back to Input
+    // Global Escape key: close modals/drawer, ignore fullscreen exit, protect active downloads
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const drawer = document.getElementById('drawerMenu');
-        if (!drawer.classList.contains('hidden')) {
-          setMobileMenuOpen(false);
+      if (e.key !== 'Escape') return;
+
+      const settingsModal = document.getElementById('settingsModal');
+      if (settingsModal && !settingsModal.classList.contains('hidden')) {
+        closeSettingsModal();
+        return;
+      }
+
+      const shortcutsModal = document.getElementById('shortcutsModal');
+      if (shortcutsModal && !shortcutsModal.classList.contains('hidden')) {
+        closeShortcutsModal();
+        return;
+      }
+
+      const drawer = document.getElementById('drawerMenu');
+      if (drawer && !drawer.classList.contains('hidden')) {
+        setMobileMenuOpen(false);
+        return;
+      }
+
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        return;
+      }
+
+      const inputVisible = !document.getElementById('inputSection').classList.contains('hidden');
+      if (!inputVisible) {
+        if (activeDownloads.size > 0) {
+          const now = Date.now();
+          if (now - lastEscapeWarnAt < 3000) {
+            lastEscapeWarnAt = 0;
+            resetToInput();
+          } else {
+            lastEscapeWarnAt = now;
+            showToast("Download in progress — cancel it first or press Esc again", true);
+          }
           return;
         }
-        const inputVisible = !document.getElementById('inputSection').classList.contains('hidden');
-        if (!inputVisible) {
-          resetToInput();
-        }
+        resetToInput();
       }
     });
 
     /* =========================================================================
-     * SECURITY & STORAGE HELPERS
+     * SECURITY, FILENAME TEMPLATE & STORAGE HELPERS
      * ========================================================================= */
     function isSafeHttpsUrl(rawUrl) {
       if (!rawUrl || typeof rawUrl !== 'string') return false;
@@ -575,9 +1071,54 @@
       }
     }
 
+    function isHlsUrl(url) {
+      return typeof url === 'string' && /\.m3u8(?:$|\?|#)/i.test(url.trim());
+    }
+
+    function upgradeTwitterImageUrl(url, sizeName = 'orig') {
+      if (!isSafeHttpsUrl(url)) return "";
+      try {
+        const parsed = new URL(url.trim());
+        if (parsed.hostname.endsWith('twimg.com') && /\/media\//.test(parsed.pathname)) {
+          parsed.pathname = parsed.pathname.replace(/:(small|medium|large|orig|thumb)$/i, '');
+          parsed.searchParams.set('name', sizeName);
+          return parsed.toString();
+        }
+        return parsed.toString();
+      } catch {
+        return url;
+      }
+    }
+
     function sanitizeFilenamePart(str, fallback = 'video') {
-      const cleaned = String(str || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40);
+      const cleaned = String(str || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48);
       return cleaned || fallback;
+    }
+
+    function buildMediaFilename({ handle, id, index = 0, totalCount = 1, resLabel = '', ext = 'mp4' }) {
+      const template = (appSettings && appSettings.filenameTemplate) || DEFAULT_SETTINGS.filenameTemplate;
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+      const safeHandle = sanitizeFilenamePart(handle, 'user');
+      const safeId = sanitizeFilenamePart(id, String(Date.now()));
+      const safeRes = sanitizeFilenamePart(resLabel, 'media');
+      const indexPart = totalCount > 1 ? `_v${index + 1}` : '';
+
+      let rawBase = template
+        .replace(/\{handle\}/gi, safeHandle)
+        .replace(/\{id\}/gi, safeId)
+        .replace(/\{res\}/gi, safeRes)
+        .replace(/\{index\}/gi, indexPart)
+        .replace(/\{date\}/gi, dateStr);
+
+      rawBase = rawBase
+        .replace(/[^a-zA-Z0-9_-]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .slice(0, 120);
+
+      const safeExt = sanitizeFilenamePart(ext, 'mp4').toLowerCase();
+      return `${rawBase || `X_${safeHandle}_${safeId}`}.${safeExt}`;
     }
 
     function safeStorageGet(key) {
@@ -605,13 +1146,136 @@
     }
 
     /* =========================================================================
+     * SETTINGS & SHORTCUTS MODALS
+     * ========================================================================= */
+    function loadSettings() {
+      try {
+        const raw = safeStorageGet(STORAGE_KEY_SETTINGS);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          appSettings = {
+            filenameTemplate: typeof parsed.filenameTemplate === 'string' && parsed.filenameTemplate.trim()
+              ? parsed.filenameTemplate.trim()
+              : DEFAULT_SETTINGS.filenameTemplate,
+            autoPaste: typeof parsed.autoPaste === 'boolean' ? parsed.autoPaste : DEFAULT_SETTINGS.autoPaste,
+            preferSavePicker: typeof parsed.preferSavePicker === 'boolean' ? parsed.preferSavePicker : DEFAULT_SETTINGS.preferSavePicker
+          };
+        }
+      } catch {
+        appSettings = { ...DEFAULT_SETTINGS };
+      }
+    }
+
+    function persistSettings() {
+      safeStorageSet(STORAGE_KEY_SETTINGS, JSON.stringify(appSettings));
+    }
+
+    function openSettingsModal() {
+      setMobileMenuOpen(false);
+      document.getElementById('filenameTemplateInput').value = appSettings.filenameTemplate;
+      document.getElementById('settingAutoPaste').checked = Boolean(appSettings.autoPaste);
+      document.getElementById('settingSavePicker').checked = Boolean(appSettings.preferSavePicker);
+      updateFilenamePreview();
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      saveSettingsFromUI();
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    function updateFilenamePreview() {
+      const inputVal = document.getElementById('filenameTemplateInput').value.trim();
+      appSettings.filenameTemplate = inputVal || DEFAULT_SETTINGS.filenameTemplate;
+      persistSettings();
+      const preview = buildMediaFilename({
+        handle: 'elonmusk',
+        id: '2073996017884627428',
+        index: 1,
+        totalCount: 2,
+        resLabel: '1080x1920',
+        ext: 'mp4'
+      });
+      document.getElementById('filenamePreviewText').textContent = preview;
+    }
+
+    function insertTemplateToken(token) {
+      const input = document.getElementById('filenameTemplateInput');
+      const start = input.selectionStart ?? input.value.length;
+      const end = input.selectionEnd ?? input.value.length;
+      const nextVal = input.value.slice(0, start) + token + input.value.slice(end);
+      input.value = nextVal;
+      input.focus();
+      updateFilenamePreview();
+    }
+
+    function resetFilenameTemplate() {
+      document.getElementById('filenameTemplateInput').value = DEFAULT_SETTINGS.filenameTemplate;
+      updateFilenamePreview();
+      showToast("Filename template reset");
+    }
+
+    function saveSettingsFromUI() {
+      const tpl = document.getElementById('filenameTemplateInput').value.trim();
+      appSettings.filenameTemplate = tpl || DEFAULT_SETTINGS.filenameTemplate;
+      appSettings.autoPaste = document.getElementById('settingAutoPaste').checked;
+      appSettings.preferSavePicker = document.getElementById('settingSavePicker').checked;
+      persistSettings();
+    }
+
+    function openShortcutsModal() {
+      setMobileMenuOpen(false);
+      const baseUrl = window.location.href.split('?')[0].split('#')[0];
+      document.getElementById('shortcutUrlTemplate').value = `${baseUrl}?url={TWEET_URL}`;
+      document.getElementById('bookmarkletCodeInput').value =
+        `javascript:location.href=${JSON.stringify(baseUrl)}+'?url='+encodeURIComponent(location.href)`;
+
+      const fileNote = document.getElementById('fileProtocolShortcutNote');
+      if (window.location.protocol === 'file:') {
+        fileNote.classList.remove('hidden');
+      } else {
+        fileNote.classList.add('hidden');
+      }
+      document.getElementById('shortcutsModal').classList.remove('hidden');
+    }
+
+    function closeShortcutsModal() {
+      document.getElementById('shortcutsModal').classList.add('hidden');
+    }
+
+    async function copyShortcutTemplate() {
+      const val = document.getElementById('shortcutUrlTemplate').value;
+      const ok = await copyToClipboard(val);
+      showToast(ok ? "Shortcut URL template copied!" : "Copy failed — select and copy manually", !ok);
+    }
+
+    async function copyBookmarkletCode() {
+      const val = document.getElementById('bookmarkletCodeInput').value;
+      const ok = await copyToClipboard(val);
+      showToast(ok ? "Bookmarklet code copied!" : "Copy failed — select and copy manually", !ok);
+    }
+
+    /* =========================================================================
      * THEME & NAVIGATION MENU MANAGEMENT
      * ========================================================================= */
     function initTheme() {
       const savedTheme = safeStorageGet(STORAGE_KEY_THEME);
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+      const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+      const isDark = savedTheme === 'dark' || (!savedTheme && Boolean(mq && mq.matches));
       applyTheme(isDark);
+
+      if (mq) {
+        const onSystemChange = (e) => {
+          if (!safeStorageGet(STORAGE_KEY_THEME)) {
+            applyTheme(e.matches);
+          }
+        };
+        if (typeof mq.addEventListener === 'function') {
+          mq.addEventListener('change', onSystemChange);
+        } else if (typeof mq.addListener === 'function') {
+          mq.addListener(onSystemChange);
+        }
+      }
     }
 
     function toggleTheme() {
@@ -623,12 +1287,15 @@
     function applyTheme(isDark) {
       const htmlEl = document.documentElement;
       const icon = document.getElementById('themeIcon');
+      const themeMeta = document.getElementById('themeColorMeta');
       if (isDark) {
         htmlEl.classList.add('dark');
         icon.className = "fa-solid fa-sun text-amber-400 text-base";
+        if (themeMeta) themeMeta.setAttribute('content', '#0f1419');
       } else {
         htmlEl.classList.remove('dark');
         icon.className = "fa-solid fa-moon text-base";
+        if (themeMeta) themeMeta.setAttribute('content', '#f7f9fa');
       }
     }
 
@@ -665,15 +1332,26 @@
         ? "fa-solid fa-circle-exclamation text-red-400 shrink-0"
         : "fa-solid fa-circle-check text-green-400 dark:text-green-600 shrink-0";
 
-      toast.classList.remove('hidden');
+      toast.classList.remove('opacity-0', '-translate-y-2', 'invisible');
+      toast.classList.add('opacity-100', 'translate-y-0', 'visible');
+
       clearTimeout(window.toastTimer);
       window.toastTimer = setTimeout(() => {
-        toast.classList.add('hidden');
+        toast.classList.remove('opacity-100', 'translate-y-0', 'visible');
+        toast.classList.add('opacity-0', '-translate-y-2', 'invisible');
       }, 3200);
     }
 
-    // Uses execCommand('copy') so clipboard copy works cleanly inside sandboxed iframes
-    function copyToClipboard(text) {
+    async function copyToClipboard(text) {
+      if (window.isSecureContext && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch {
+          // Fall through to execCommand fallback
+        }
+      }
+
       const textArea = document.createElement("textarea");
       textArea.value = text;
       textArea.setAttribute('readonly', '');
@@ -681,7 +1359,7 @@
       textArea.style.top = "-9999px";
       textArea.style.opacity = "0";
       document.body.appendChild(textArea);
-      textArea.focus();
+      textArea.focus({ preventScroll: true });
       textArea.select();
       let ok = false;
       try {
@@ -690,24 +1368,27 @@
         ok = false;
       }
       document.body.removeChild(textArea);
-
-      if (!ok && navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).catch(() => {});
-        return true;
-      }
       return ok;
     }
 
     /* =========================================================================
-     * URL PARSING & INPUT VALIDATION
+     * URL PARSING, t.co DETECTION & INPUT VALIDATION
      * ========================================================================= */
     function extractTweetDetails(rawInput) {
       if (!rawInput || typeof rawInput !== 'string') return null;
       const trimmed = rawInput.trim();
 
-      // Match standard, mobile, and embed-proxy domains (x.com, twitter.com, fxtwitter, vxtwitter, fixupx, fixvx)
+      // Match /i/web/status/ID on standard & mirror domains
+      const webMatch = trimmed.match(
+        /(?:(?:mobile|www)\.)?(?:(?:twitter|x|fxtwitter|vxtwitter|fixupx|fixvx|girlcockx|twittpr|xcancel)\.com|nitter\.[a-z0-9.-]+)\/i\/web\/status(?:es)?\/(\d{6,22})/i
+      );
+      if (webMatch) {
+        return { username: 'i', id: webMatch[1] };
+      }
+
+      // Match standard, mobile, and mirror domains (x.com, twitter.com, fxtwitter, vxtwitter, xcancel, nitter)
       const domainMatch = trimmed.match(
-        /(?:(?:mobile|www)\.)?(?:twitter|x|fxtwitter|vxtwitter|fixupx|fixvx|girlcockx|twittpr)\.com\/([a-zA-Z0-9_]+)\/status(?:es)?\/(\d{6,22})/i
+        /(?:(?:mobile|www)\.)?(?:(?:twitter|x|fxtwitter|vxtwitter|fixupx|fixvx|girlcockx|twittpr|xcancel)\.com|nitter\.[a-z0-9.-]+)\/([a-zA-Z0-9_]+)\/status(?:es)?\/(\d{6,22})/i
       );
       if (domainMatch) {
         return { username: domainMatch[1], id: domainMatch[2] };
@@ -728,50 +1409,71 @@
       return null;
     }
 
-    function handleUrlInputChange(val) {
-      const clearBtn = document.getElementById('clearInputBtn');
+    function isTcoShortLink(rawInput) {
+      if (!rawInput || typeof rawInput !== 'string') return false;
+      if (extractTweetDetails(rawInput)) return false;
+      return /https?:\/\/t\.co\/[a-zA-Z0-9]+/i.test(rawInput.trim());
+    }
+
+    function setValidationMessage(kind, messageText, boldPart = '') {
       const statusIcon = document.getElementById('inputStatusIcon');
       const feedback = document.getElementById('validationFeedback');
+      feedback.textContent = '';
+
+      if (!kind) {
+        statusIcon.className = "fa-solid fa-link text-sm text-gray-400";
+        feedback.classList.add('hidden');
+        return;
+      }
+
+      if (kind === 'valid') {
+        statusIcon.className = "fa-solid fa-circle-check text-sm text-green-500";
+        feedback.className = "text-xs px-1 flex items-center space-x-1.5 text-green-600 dark:text-green-400";
+        const icon = document.createElement('i');
+        icon.className = "fa-solid fa-check";
+        const span = document.createElement('span');
+        span.textContent = messageText;
+        if (boldPart) {
+          const strong = document.createElement('strong');
+          strong.textContent = boldPart;
+          span.appendChild(strong);
+        }
+        feedback.append(icon, span);
+        feedback.classList.remove('hidden');
+        return;
+      }
+
+      statusIcon.className = "fa-solid fa-circle-exclamation text-sm text-amber-500";
+      feedback.className = "text-xs px-1 flex items-center space-x-1.5 text-amber-600 dark:text-amber-400";
+      const icon = document.createElement('i');
+      icon.className = "fa-solid fa-circle-info";
+      const span = document.createElement('span');
+      span.textContent = messageText;
+      feedback.append(icon, span);
+      feedback.classList.remove('hidden');
+    }
+
+    function handleUrlInputChange(val) {
+      const clearBtn = document.getElementById('clearInputBtn');
       const trimmed = val.trim();
 
       if (trimmed.length > 0) {
         clearBtn.classList.remove('hidden');
       } else {
         clearBtn.classList.add('hidden');
-        statusIcon.className = "fa-solid fa-link text-sm text-gray-400";
-        feedback.classList.add('hidden');
-        feedback.textContent = '';
+        setValidationMessage(null);
         return;
       }
 
       const details = extractTweetDetails(trimmed);
-      feedback.textContent = '';
-
       if (details) {
-        statusIcon.className = "fa-solid fa-circle-check text-sm text-green-500";
-        feedback.className = "text-xs px-1 flex items-center space-x-1.5 text-green-600 dark:text-green-400";
-
-        const icon = document.createElement('i');
-        icon.className = "fa-solid fa-check";
-        const span = document.createElement('span');
-        span.textContent = "Detected Post ID: ";
-        const strong = document.createElement('strong');
-        strong.textContent = details.id;
-        span.appendChild(strong);
-        feedback.append(icon, span);
-        feedback.classList.remove('hidden');
+        setValidationMessage('valid', "Detected Post ID: ", details.id);
+      } else if (isTcoShortLink(trimmed)) {
+        setValidationMessage('warn', "t.co short link detected — open it in your browser first and copy the full x.com/.../status/... link.");
       } else if (trimmed.length > 10) {
-        statusIcon.className = "fa-solid fa-circle-exclamation text-sm text-amber-500";
-        feedback.className = "text-xs px-1 flex items-center space-x-1.5 text-amber-600 dark:text-amber-400";
-
-        const icon = document.createElement('i');
-        icon.className = "fa-solid fa-circle-info";
-        const span = document.createElement('span');
-        span.textContent = "Paste a valid x.com/user/status/ID link or numeric Tweet ID";
-        feedback.append(icon, span);
-        feedback.classList.remove('hidden');
+        setValidationMessage('warn', "Paste a valid x.com/user/status/ID link or numeric Tweet ID");
       } else {
-        feedback.classList.add('hidden');
+        setValidationMessage(null);
       }
     }
 
@@ -786,7 +1488,7 @@
       setTimeout(() => {
         const val = document.getElementById('urlInput').value.trim();
         handleUrlInputChange(val);
-        if (extractTweetDetails(val)) {
+        if (appSettings.autoPaste && extractTweetDetails(val)) {
           handleFormSubmit(new Event('submit'));
         }
       }, 60);
@@ -801,13 +1503,13 @@
             input.value = text.trim();
             handleUrlInputChange(input.value);
             showToast("Link pasted from clipboard");
-            if (extractTweetDetails(input.value)) {
+            if (appSettings.autoPaste && extractTweetDetails(input.value)) {
               handleFormSubmit(new Event('submit'));
             }
             return;
           }
         } catch {
-          // Clipboard read permission denied or blocked in iframe
+          // Clipboard read permission denied or blocked
         }
       }
       const input = document.getElementById('urlInput');
@@ -824,7 +1526,7 @@
     }
 
     /* =========================================================================
-     * NETWORKING WITH TIMEOUTS & CANCELLATION
+     * NETWORKING WITH TIMEOUTS, ERROR CLASSIFICATION & API EXTRACTION
      * ========================================================================= */
     async function fetchWithTimeout(url, timeoutMs, parentSignal, fetchOptions = {}) {
       const timeoutCtrl = new AbortController();
@@ -859,20 +1561,145 @@
       showToast("Extraction cancelled");
     }
 
+    async function fetchTweetData(tweetDetails, signal, onStatus, options = {}) {
+      let fxState = 'network';
+      let vxState = 'network';
+      let normalizedData = null;
+
+      if (onStatus) onStatus("Fetching...", "Querying primary media endpoint (FxTwitter)...");
+
+      // 1. Primary API: FxTwitter
+      try {
+        const res = await fetchWithTimeout(`https://api.fxtwitter.com/i/status/${tweetDetails.id}`, API_TIMEOUT_MS, signal);
+        if (res.status === 429) {
+          fxState = 'rate_limit';
+        } else if (res.status === 401 || res.status === 403) {
+          fxState = 'private_or_age';
+        } else if (res.status === 404) {
+          fxState = 'not_found';
+        } else if (res.ok) {
+          const raw = await res.json();
+          if (raw && raw.code === 404) {
+            fxState = 'not_found';
+          } else if (raw && (raw.code === 401 || raw.code === 403)) {
+            fxState = 'private_or_age';
+          } else if (raw && raw.code === 200 && raw.tweet) {
+            if (raw.tweet.media?.videos?.length > 0) {
+              normalizedData = normalizeFxTwitter(raw.tweet, tweetDetails.id, false);
+            } else if (raw.tweet.quote?.media?.videos?.length > 0) {
+              normalizedData = normalizeFxTwitter(raw.tweet.quote, tweetDetails.id, true);
+            } else if (raw.tweet.media?.photos?.length > 0) {
+              normalizedData = normalizeFxTwitter(raw.tweet, tweetDetails.id, false);
+            } else if (raw.tweet.quote?.media?.photos?.length > 0) {
+              normalizedData = normalizeFxTwitter(raw.tweet.quote, tweetDetails.id, true);
+            }
+            if (normalizedData && (normalizedData.videos.length > 0 || normalizedData.photos.length > 0)) {
+              return { ok: true, data: normalizedData };
+            }
+            fxState = 'no_media';
+          }
+        }
+      } catch (err) {
+        if (signal && signal.aborted) return { ok: false, reason: 'aborted' };
+        fxState = 'network';
+        console.warn("Primary API failed or timed out:", err);
+      }
+
+      if (signal && signal.aborted) return { ok: false, reason: 'aborted' };
+
+      // 2. Secondary API: VxTwitter failover
+      if (onStatus) onStatus("Backup API...", "Trying backup media endpoint (VxTwitter)...");
+
+      try {
+        const vxRes = await fetchWithTimeout(`https://api.vxtwitter.com/Twitter/status/${tweetDetails.id}`, API_TIMEOUT_MS, signal);
+        if (vxRes.status === 429) {
+          vxState = 'rate_limit';
+        } else if (vxRes.status === 401 || vxRes.status === 403) {
+          vxState = 'private_or_age';
+        } else if (vxRes.status === 404) {
+          vxState = 'not_found';
+        } else if (vxRes.ok) {
+          const vxRaw = await vxRes.json();
+          if (vxRaw) {
+            const hasVid = Array.isArray(vxRaw.media_extended) && vxRaw.media_extended.some(m => m.type === 'video' || m.type === 'gif');
+            const hasQrtVid = Array.isArray(vxRaw.qrt?.media_extended) && vxRaw.qrt.media_extended.some(m => m.type === 'video' || m.type === 'gif');
+            const hasImg = Array.isArray(vxRaw.media_extended) && vxRaw.media_extended.some(m => m.type === 'image');
+            const hasQrtImg = Array.isArray(vxRaw.qrt?.media_extended) && vxRaw.qrt.media_extended.some(m => m.type === 'image');
+
+            if (hasVid) {
+              normalizedData = normalizeVxTwitter(vxRaw, tweetDetails.id, false);
+            } else if (hasQrtVid) {
+              normalizedData = normalizeVxTwitter(vxRaw.qrt, tweetDetails.id, true);
+            } else if (hasImg) {
+              normalizedData = normalizeVxTwitter(vxRaw, tweetDetails.id, false);
+            } else if (hasQrtImg) {
+              normalizedData = normalizeVxTwitter(vxRaw.qrt, tweetDetails.id, true);
+            }
+
+            if (normalizedData && (normalizedData.videos.length > 0 || normalizedData.photos.length > 0)) {
+              return { ok: true, data: normalizedData };
+            }
+            vxState = 'no_media';
+          }
+        }
+      } catch (vxErr) {
+        if (signal && signal.aborted) return { ok: false, reason: 'aborted' };
+        vxState = 'network';
+        console.warn("Secondary API failed or timed out:", vxErr);
+      }
+
+      if (signal && signal.aborted) return { ok: false, reason: 'aborted' };
+
+      // 3. Built-in sample fallback strictly for exact sample Tweet ID
+      if (options.allowSampleFallback && tweetDetails.id === SAMPLE_TWEET_ID) {
+        const clone = JSON.parse(JSON.stringify(SAMPLE_FALLBACK));
+        clone.isSampleFallback = true;
+        return { ok: true, data: clone };
+      }
+
+      // Determine most accurate failure classification
+      const states = [fxState, vxState];
+      let reason = 'network';
+      if (fxState === 'network' && vxState === 'network') {
+        reason = 'network';
+      } else if (states.includes('rate_limit')) {
+        reason = 'rate_limit';
+      } else if (states.includes('private_or_age')) {
+        reason = 'private_or_age';
+      } else if (states.includes('no_media')) {
+        reason = 'no_media';
+      } else if (states.includes('not_found')) {
+        reason = 'not_found';
+      }
+
+      return { ok: false, reason };
+    }
+
     async function handleFormSubmit(e) {
       if (e) e.preventDefault();
-      const inputUrl = document.getElementById('urlInput').value.trim();
-      const tweetDetails = extractTweetDetails(inputUrl);
+      const inputEl = document.getElementById('urlInput');
+      const inputUrl = inputEl.value.trim();
 
+      if (isTcoShortLink(inputUrl)) {
+        setValidationMessage('warn', "t.co short links hide the Tweet ID — open the link first and paste the full x.com URL.");
+        showErrorNotice('tco');
+        document.getElementById('inputSection').classList.add('hidden');
+        return;
+      }
+
+      const tweetDetails = extractTweetDetails(inputUrl);
       if (!tweetDetails) {
+        setValidationMessage('warn', "Enter a valid X / Twitter post link or 15–20 digit Tweet ID.");
+        inputEl.focus();
         showToast("Please enter a valid X / Twitter post link or ID", true);
         return;
       }
 
-      // Cancel any previous in-flight extraction, size probes, or downloads
+      lastExtractedInput = inputUrl;
+
+      // Cancel any previous in-flight fetch & size probes (leave background downloads alone unless user cancels)
       if (activeFetchController) activeFetchController.abort();
       abortSizeProbes();
-      abortAllDownloads();
       stopInlineVideo();
 
       const requestId = ++activeRequestId;
@@ -884,83 +1711,89 @@
       document.getElementById('resultSection').classList.add('hidden');
       document.getElementById('errorSection').classList.add('hidden');
       document.getElementById('loadingSection').classList.remove('hidden');
-      document.getElementById('loadingStatusBadge').textContent = "Fetching...";
-      document.getElementById('loadingSubtext').textContent = "Querying primary media endpoint (FxTwitter)...";
 
       try {
-        let normalizedData = null;
+        const result = await fetchTweetData(
+          tweetDetails,
+          signal,
+          (badge, subtext) => {
+            document.getElementById('loadingStatusBadge').textContent = badge;
+            document.getElementById('loadingSubtext').textContent = subtext;
+          },
+          { allowSampleFallback: true }
+        );
 
-        // 1. Primary API: FixTweet (FxTwitter) — supports variants, bitrates, durations, and quoted tweets
-        try {
-          const res = await fetchWithTimeout(`https://api.fxtwitter.com/i/status/${tweetDetails.id}`, API_TIMEOUT_MS, signal);
-          if (res.ok) {
-            const raw = await res.json();
-            if (raw && raw.code === 200 && raw.tweet) {
-              if (raw.tweet.media?.videos?.length > 0) {
-                normalizedData = normalizeFxTwitter(raw.tweet, tweetDetails.id, false);
-              } else if (raw.tweet.quote?.media?.videos?.length > 0) {
-                normalizedData = normalizeFxTwitter(raw.tweet.quote, tweetDetails.id, true);
-              }
-            }
-          }
-        } catch (apiErr) {
-          if (signal.aborted) return;
-          console.warn("Primary API failed or timed out, failing over...", apiErr);
-        }
+        if (requestId !== activeRequestId || signal.aborted || result.reason === 'aborted') return;
 
-        if (requestId !== activeRequestId || signal.aborted) return;
-
-        // 2. Secondary API: VxTwitter failover
-        if (!normalizedData) {
-          document.getElementById('loadingStatusBadge').textContent = "Backup API...";
-          document.getElementById('loadingSubtext').textContent = "Trying backup media endpoint (VxTwitter)...";
-
-          try {
-            const vxRes = await fetchWithTimeout(`https://api.vxtwitter.com/Twitter/status/${tweetDetails.id}`, API_TIMEOUT_MS, signal);
-            if (vxRes.ok) {
-              const vxRaw = await vxRes.json();
-              if (vxRaw && Array.isArray(vxRaw.media_extended) && vxRaw.media_extended.some(m => m.type === 'video' || m.type === 'gif')) {
-                normalizedData = normalizeVxTwitter(vxRaw, tweetDetails.id, false);
-              } else if (vxRaw?.qrt && Array.isArray(vxRaw.qrt.media_extended) && vxRaw.qrt.media_extended.some(m => m.type === 'video' || m.type === 'gif')) {
-                normalizedData = normalizeVxTwitter(vxRaw.qrt, tweetDetails.id, true);
-              }
-            }
-          } catch (vxErr) {
-            if (signal.aborted) return;
-            console.warn("Secondary API failed or timed out:", vxErr);
-          }
-        }
-
-        if (requestId !== activeRequestId || signal.aborted) return;
-
-        // 3. Offline / Rate-Limit Fallback for Built-In Sample Post
-        if (!normalizedData && (tweetDetails.id === "2073996017884627428" || inputUrl.includes("MinendTL"))) {
-          normalizedData = JSON.parse(JSON.stringify(SAMPLE_FALLBACK));
-        }
-
-        if (normalizedData && normalizedData.videos.length > 0) {
-          currentTweetData = normalizedData;
+        if (result.ok && result.data) {
+          currentTweetData = result.data;
           activeVideoIndex = 0;
-          saveToHistory(normalizedData);
+          if (!result.data.isSampleFallback) {
+            saveToHistory(result.data);
+          }
           renderTweetResults();
         } else {
-          showErrorNotice(
-            "No Playable Video Found",
-            "This post (and any quoted post) doesn't appear to contain a video or GIF, or the account is private/age-restricted."
-          );
+          showErrorNotice(result.reason || 'no_media');
         }
       } catch (err) {
         if (signal.aborted || requestId !== activeRequestId) return;
         console.error("Extraction error:", err);
-        showErrorNotice(
-          "Network Error",
-          "Could not connect to media extraction servers. Please check your internet connection and try again."
-        );
+        showErrorNotice('network');
       } finally {
         if (requestId === activeRequestId) {
           document.getElementById('loadingSection').classList.add('hidden');
           activeFetchController = null;
         }
+      }
+    }
+
+    function retryLastExtraction() {
+      if (lastExtractedInput) {
+        document.getElementById('urlInput').value = lastExtractedInput;
+        handleUrlInputChange(lastExtractedInput);
+        handleFormSubmit(new Event('submit'));
+      } else {
+        resetToInput();
+      }
+    }
+
+    async function refreshCurrentTweet() {
+      if (!currentTweetData || !currentTweetData.id) return;
+      const btn = document.getElementById('refreshTweetBtn');
+      const icon = document.getElementById('refreshTweetIcon');
+      btn.disabled = true;
+      icon.classList.add('fa-spin');
+
+      if (activeFetchController) activeFetchController.abort();
+      activeFetchController = new AbortController();
+      const { signal } = activeFetchController;
+
+      try {
+        const result = await fetchTweetData(
+          { username: currentTweetData.authorHandle || 'i', id: currentTweetData.id },
+          signal,
+          null,
+          { allowSampleFallback: false }
+        );
+        if (signal.aborted) return;
+
+        if (result.ok && result.data) {
+          currentTweetData = result.data;
+          if (activeVideoIndex >= (currentTweetData.videos?.length || 0)) {
+            activeVideoIndex = 0;
+          }
+          saveToHistory(currentTweetData);
+          renderTweetResults();
+          showToast("Post metadata & CDN links refreshed");
+        } else {
+          showToast("Could not refresh post right now", true);
+        }
+      } catch {
+        if (!signal.aborted) showToast("Refresh failed — check connection", true);
+      } finally {
+        btn.disabled = false;
+        icon.classList.remove('fa-spin');
+        activeFetchController = null;
       }
     }
 
@@ -972,73 +1805,117 @@
       const videos = [];
 
       rawVideos.forEach(vObj => {
+        const baseW = Number(vObj.width) > 0 ? Number(vObj.width) : 720;
+        const baseH = Number(vObj.height) > 0 ? Number(vObj.height) : 1280;
         let resolutions = [];
+        let hlsCandidates = [];
 
         if (Array.isArray(vObj.variants) && vObj.variants.length > 0) {
           const mp4s = vObj.variants.filter(v =>
             isSafeHttpsUrl(v.url) &&
+            !isHlsUrl(v.url) &&
             ((v.content_type && v.content_type.includes('mp4')) || v.url.includes('.mp4'))
           );
 
+          hlsCandidates = vObj.variants.filter(v =>
+            isSafeHttpsUrl(v.url) &&
+            ((v.content_type && /mpegurl/i.test(v.content_type)) || isHlsUrl(v.url))
+          );
+
           resolutions = mp4s.map(v => {
-            let w = vObj.width || 720;
-            let h = vObj.height || 1280;
+            let w = baseW;
+            let h = baseH;
+            let hasExplicitDims = false;
             const dimMatch = v.url.match(/\/(\d+)x(\d+)\//);
             if (dimMatch) {
               w = parseInt(dimMatch[1], 10);
               h = parseInt(dimMatch[2], 10);
-            } else if (v.bitrate) {
-              w = v.bitrate > 1500000 ? 1080 : v.bitrate > 800000 ? 720 : 480;
-              h = v.bitrate > 1500000 ? 1920 : v.bitrate > 800000 ? 1280 : 852;
+              hasExplicitDims = true;
             }
             return {
               width: w,
               height: h,
               url: v.url,
               bitrate: Number(v.bitrate) || 0,
-              exactBytes: 0
+              exactBytes: 0,
+              hasExplicitDims
             };
           });
         }
 
-        if (resolutions.length === 0 && isSafeHttpsUrl(vObj.url)) {
+        if (resolutions.length === 0 && isSafeHttpsUrl(vObj.url) && !isHlsUrl(vObj.url)) {
           resolutions.push({
-            width: vObj.width || 720,
-            height: vObj.height || 1280,
+            width: baseW,
+            height: baseH,
             url: vObj.url,
             bitrate: 0,
-            exactBytes: 0
+            exactBytes: 0,
+            hasExplicitDims: false
           });
         }
 
-        if (resolutions.length === 0) return;
+        const thumbUrl = isSafeHttpsUrl(vObj.thumbnail_url) ? vObj.thumbnail_url : "";
+        const isGif = vObj.type === 'gif' || (typeof vObj.url === 'string' && vObj.url.includes('tweet_video'));
 
-        // Sort highest bitrate first so deduplication always preserves the best encode per resolution
+        if (resolutions.length === 0) {
+          const hlsUrl = hlsCandidates[0]?.url || (isSafeHttpsUrl(vObj.url) && isHlsUrl(vObj.url) ? vObj.url : "");
+          if (hlsUrl) {
+            videos.push({
+              type: isGif ? 'gif' : 'video',
+              isHlsOnly: true,
+              hlsUrl,
+              thumb: thumbUrl,
+              duration: Number(vObj.duration) || 0,
+              width: baseW,
+              height: baseH,
+              resolutions: []
+            });
+          }
+          return;
+        }
+
+        // Sort highest bitrate first so deduplication preserves the best encode
         resolutions.sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
 
         const unique = [];
         const seen = new Set();
         resolutions.forEach(r => {
-          const key = `${r.width}x${r.height}`;
+          const key = r.hasExplicitDims
+            ? `${r.width}x${r.height}`
+            : `${r.width}x${r.height}_${r.bitrate || r.url}`;
           if (!seen.has(key)) {
             seen.add(key);
             unique.push(r);
           }
         });
 
-        // Sort ascending by pixel count (lowest -> highest)
-        unique.sort((a, b) => (a.width * a.height) - (b.width * b.height));
-
-        const thumbUrl = isSafeHttpsUrl(vObj.thumbnail_url) ? vObj.thumbnail_url : "";
-        const isGif = vObj.type === 'gif' || (typeof vObj.url === 'string' && vObj.url.includes('tweet_video'));
+        // Sort ascending by pixel count, then bitrate (lowest -> highest)
+        unique.sort((a, b) => ((a.width * a.height) - (b.width * b.height)) || ((a.bitrate || 0) - (b.bitrate || 0)));
 
         videos.push({
           type: isGif ? 'gif' : 'video',
+          isHlsOnly: false,
+          hlsUrl: hlsCandidates[0]?.url || "",
           thumb: thumbUrl,
           duration: Number(vObj.duration) || 0,
+          width: baseW,
+          height: baseH,
           resolutions: unique
         });
       });
+
+      let photos = [];
+      if (videos.length === 0 && Array.isArray(tweet.media?.photos)) {
+        photos = tweet.media.photos
+          .filter(p => isSafeHttpsUrl(p.url))
+          .map(p => ({
+            previewUrl: p.url,
+            fullUrl: upgradeTwitterImageUrl(p.url, 'orig') || p.url,
+            width: Number(p.width) || 0,
+            height: Number(p.height) || 0,
+            altText: typeof p.altText === 'string' ? p.altText : (typeof p.alt_text === 'string' ? p.alt_text : '')
+          }));
+      }
 
       return {
         id: String(tweet.id || fallbackId),
@@ -1047,29 +1924,70 @@
         avatar: isSafeHttpsUrl(tweet.author?.avatar_url) ? tweet.author.avatar_url : DEFAULT_AVATAR_URL,
         text: tweet.text || "",
         isQuoted: Boolean(isQuoted),
-        videos
+        mediaKind: videos.length > 0 ? 'video' : (photos.length > 0 ? 'photos' : 'none'),
+        videos,
+        photos
       };
     }
 
     function normalizeVxTwitter(vx, fallbackId, isQuoted) {
-      const videoMedia = (vx.media_extended || []).filter(
+      const mediaList = Array.isArray(vx.media_extended) ? vx.media_extended : [];
+      const videoMedia = mediaList.filter(
         m => (m.type === 'video' || m.type === 'gif') && isSafeHttpsUrl(m.url)
       );
 
-      const videos = videoMedia.map(m => ({
-        type: m.type === 'gif' ? 'gif' : 'video',
-        thumb: isSafeHttpsUrl(m.thumbnail_url) ? m.thumbnail_url : "",
-        duration: Number(m.duration_millis) ? Number(m.duration_millis) / 1000 : 0,
-        resolutions: [
-          {
-            width: m.size?.width || 720,
-            height: m.size?.height || 1280,
-            bitrate: 0,
-            exactBytes: 0,
-            url: m.url
-          }
-        ]
-      }));
+      const videos = videoMedia.map(m => {
+        const w = Number(m.size?.width) > 0 ? Number(m.size.width) : 720;
+        const h = Number(m.size?.height) > 0 ? Number(m.size.height) : 1280;
+        const thumb = isSafeHttpsUrl(m.thumbnail_url) ? m.thumbnail_url : "";
+        const duration = Number(m.duration_millis) ? Number(m.duration_millis) / 1000 : 0;
+
+        if (isHlsUrl(m.url)) {
+          return {
+            type: m.type === 'gif' ? 'gif' : 'video',
+            isHlsOnly: true,
+            hlsUrl: m.url,
+            thumb,
+            duration,
+            width: w,
+            height: h,
+            resolutions: []
+          };
+        }
+
+        return {
+          type: m.type === 'gif' ? 'gif' : 'video',
+          isHlsOnly: false,
+          hlsUrl: "",
+          thumb,
+          duration,
+          width: w,
+          height: h,
+          resolutions: [
+            {
+              width: w,
+              height: h,
+              bitrate: 0,
+              exactBytes: 0,
+              hasExplicitDims: Boolean(m.size?.width && m.size?.height),
+              url: m.url
+            }
+          ]
+        };
+      });
+
+      let photos = [];
+      if (videos.length === 0) {
+        photos = mediaList
+          .filter(m => m.type === 'image' && isSafeHttpsUrl(m.url))
+          .map(m => ({
+            previewUrl: m.url,
+            fullUrl: upgradeTwitterImageUrl(m.url, 'orig') || m.url,
+            width: Number(m.size?.width) || 0,
+            height: Number(m.size?.height) || 0,
+            altText: typeof m.altText === 'string' ? m.altText : ''
+          }));
+      }
 
       return {
         id: String(vx.tweetID || fallbackId),
@@ -1078,13 +1996,38 @@
         avatar: isSafeHttpsUrl(vx.user_profile_image_url) ? vx.user_profile_image_url : DEFAULT_AVATAR_URL,
         text: vx.text || "",
         isQuoted: Boolean(isQuoted),
-        videos
+        mediaKind: videos.length > 0 ? 'video' : (photos.length > 0 ? 'photos' : 'none'),
+        videos,
+        photos
       };
     }
 
     /* =========================================================================
-     * FORMATTING & FILE SIZE PROBING HELPERS
+     * FORMATTING, BADGES & FILE SIZE PROBING HELPERS
      * ========================================================================= */
+    function getQualityBadge(res, videoType = 'video') {
+      if (videoType === 'gif') {
+        return { label: "GIF MP4", cls: "bg-purple-300 text-gray-900 font-bold" };
+      }
+      const minDim = Math.min(Number(res.width) || 0, Number(res.height) || 0);
+      if (minDim >= 2160) {
+        return { label: "4K UHD", cls: "bg-amber-300 text-gray-900 font-bold" };
+      }
+      if (minDim >= 1440) {
+        return { label: "2K QHD", cls: "bg-amber-400 text-gray-900 font-bold" };
+      }
+      if (minDim >= 1080) {
+        return { label: "FULL HD", cls: "bg-amber-400 text-gray-900 font-bold" };
+      }
+      if (minDim >= 720) {
+        return { label: "HD 720p", cls: "bg-green-400 text-gray-900 font-bold" };
+      }
+      if (minDim >= 480) {
+        return { label: "SD 480p", cls: "bg-white/20 text-white" };
+      }
+      return { label: "SD", cls: "bg-white/20 text-white" };
+    }
+
     function formatDuration(seconds) {
       if (!seconds || !Number.isFinite(seconds) || seconds <= 0) return "";
       const totalSecs = Math.round(seconds);
@@ -1121,6 +2064,36 @@
       return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     }
 
+    function formatSpeed(bytesPerSec) {
+      if (!bytesPerSec || !Number.isFinite(bytesPerSec) || bytesPerSec <= 0) return "";
+      if (bytesPerSec < 1024 * 1024) {
+        return `${Math.max(1, Math.round(bytesPerSec / 1024))} KB/s`;
+      }
+      return `${(bytesPerSec / (1024 * 1024)).toFixed(1)} MB/s`;
+    }
+
+    function formatEta(seconds) {
+      if (!Number.isFinite(seconds) || seconds < 0) return "";
+      const rounded = Math.ceil(seconds);
+      if (rounded < 60) return `~${rounded}s`;
+      const mins = Math.floor(rounded / 60);
+      const secs = rounded % 60;
+      return `~${mins}m ${secs}s`;
+    }
+
+    function formatRelativeTime(timestampMs) {
+      if (!timestampMs || !Number.isFinite(timestampMs)) return "";
+      const diffSec = Math.max(0, Math.floor((Date.now() - timestampMs) / 1000));
+      if (diffSec < 60) return "Just now";
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr}h ago`;
+      const diffDay = Math.floor(diffHr / 24);
+      if (diffDay < 30) return `${diffDay}d ago`;
+      return new Date(timestampMs).toLocaleDateString();
+    }
+
     function abortSizeProbes() {
       if (sizeProbeController) {
         sizeProbeController.abort();
@@ -1128,11 +2101,7 @@
       }
     }
 
-    /**
-     * Probes the MP4 URL using a lightweight HEAD request to display the exact file size
-     * right next to the resolution before clicking download, falling back to bitrate estimate.
-     */
-    async function probeResolutionFileSize(res, activeVid, sizeTag, signal) {
+    async function probeResolutionFileSize(res, activeVid, sizeTag, signal, tweetId) {
       if (res.exactBytes > 0) {
         sizeTag.textContent = formatFileSize(res.exactBytes);
         sizeTag.title = `Exact file size (${res.exactBytes.toLocaleString()} bytes)`;
@@ -1154,6 +2123,9 @@
           sizeTag.textContent = formatFileSize(bytes);
           sizeTag.title = `Exact file size (${bytes.toLocaleString()} bytes)`;
           sizeTag.classList.remove('hidden', 'animate-pulse');
+          if (tweetId && currentTweetData && currentTweetData.id === tweetId && !currentTweetData.isSampleFallback) {
+            persistHistoryExactSizes(tweetId, currentTweetData.videos);
+          }
           return;
         }
       } catch {
@@ -1177,20 +2149,36 @@
     /* =========================================================================
      * RENDERING RESULTS (XSS-SAFE DOM CONSTRUCTION)
      * ========================================================================= */
+    function updateActiveDownloadsBanner() {
+      const banner = document.getElementById('activeDownloadsBanner');
+      const text = document.getElementById('activeDownloadsText');
+      if (activeDownloads.size > 0) {
+        text.textContent = `${activeDownloads.size} download${activeDownloads.size === 1 ? '' : 's'} active in background`;
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
     function renderTweetResults() {
       if (!currentTweetData) return;
 
       abortSizeProbes();
-      abortAllDownloads();
-      sizeProbeController = new AbortController();
-      const probeSignal = sizeProbeController.signal;
+      updateActiveDownloadsBanner();
 
       // Author & Post Context
       const avatarEl = document.getElementById('authorAvatar');
       avatarEl.src = isSafeHttpsUrl(currentTweetData.avatar) ? currentTweetData.avatar : DEFAULT_AVATAR_URL;
       document.getElementById('tweetAuthorName').textContent = currentTweetData.authorName;
       document.getElementById('tweetAuthorHandle').textContent = `@${currentTweetData.authorHandle}`;
-      document.getElementById('tweetSnippet').textContent = currentTweetData.text || "Video post on X";
+      document.getElementById('tweetSnippet').textContent = currentTweetData.text || "Media post on X";
+
+      const copyCaptionBtn = document.getElementById('copyCaptionBtn');
+      if (currentTweetData.text && currentTweetData.text.trim().length > 0) {
+        copyCaptionBtn.classList.remove('hidden');
+      } else {
+        copyCaptionBtn.classList.add('hidden');
+      }
 
       const quotedBadge = document.getElementById('quotedBadge');
       if (currentTweetData.isQuoted) {
@@ -1204,54 +2192,102 @@
       const safeId = String(currentTweetData.id).replace(/\D/g, '');
       viewOnXLink.href = safeId ? `https://x.com/${safeHandle}/status/${safeId}` : 'https://x.com';
 
+      const isPhotoMode = currentTweetData.mediaKind === 'photos' ||
+        ((currentTweetData.videos?.length || 0) === 0 && (currentTweetData.photos?.length || 0) > 0);
+
+      if (isPhotoMode) {
+        const photoCount = currentTweetData.photos.length;
+        document.getElementById('foundCountBadge').textContent =
+          photoCount > 1 ? `${photoCount} Photos Ready` : `1 Photo Ready`;
+        document.getElementById('multiVideoBar').classList.add('hidden');
+        document.getElementById('resultsLayoutGrid').classList.add('hidden');
+        document.getElementById('photoGalleryContainer').classList.remove('hidden');
+        stopInlineVideo();
+        renderPhotoGallery();
+        document.getElementById('resultSection').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('photoGalleryContainer').classList.add('hidden');
+      document.getElementById('resultsLayoutGrid').classList.remove('hidden');
+
       const totalVideos = currentTweetData.videos.length;
       document.getElementById('foundCountBadge').textContent =
         totalVideos > 1 ? `${totalVideos} Videos Ready` : `1 Video Ready`;
 
-      // Multi-Video Tabs
+      renderMultiVideoTabs();
+      renderActiveVideoMedia();
+      document.getElementById('resultSection').classList.remove('hidden');
+    }
+
+    function renderMultiVideoTabs() {
+      const bar = document.getElementById('multiVideoBar');
       const tabsContainer = document.getElementById('multiVideoTabs');
+      const dlAllBtn = document.getElementById('downloadAllVideosBtn');
+      const totalVideos = currentTweetData?.videos?.length || 0;
+
       tabsContainer.textContent = '';
-      if (totalVideos > 1) {
-        currentTweetData.videos.forEach((vid, idx) => {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          const isActive = idx === activeVideoIndex;
-          btn.className = `px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue ${
-            isActive
-              ? 'bg-xblue text-white shadow-sm'
-              : 'bg-white dark:bg-xcard text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-xborder'
-          }`;
 
-          const icon = document.createElement('i');
-          icon.className = vid.type === 'gif' ? 'fa-solid fa-repeat' : 'fa-solid fa-film';
-          icon.setAttribute('aria-hidden', 'true');
-
-          const label = document.createElement('span');
-          label.textContent = vid.type === 'gif' ? `GIF ${idx + 1}` : `Video ${idx + 1}`;
-
-          btn.append(icon, label);
-          btn.onclick = () => {
-            if (activeVideoIndex !== idx) {
-              stopInlineVideo();
-              activeVideoIndex = idx;
-              renderTweetResults();
-            }
-          };
-          tabsContainer.appendChild(btn);
-        });
-        tabsContainer.classList.remove('hidden');
-      } else {
-        tabsContainer.classList.add('hidden');
+      if (totalVideos <= 1) {
+        bar.classList.add('hidden');
+        return;
       }
 
-      const activeVid = currentTweetData.videos[activeVideoIndex];
-      const resList = activeVid.resolutions;
-      const highestRes = resList[resList.length - 1];
+      currentTweetData.videos.forEach((vid, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('role', 'tab');
+        const isActive = idx === activeVideoIndex;
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        btn.className = `px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue ${
+          isActive
+            ? 'bg-xblue text-white shadow-sm'
+            : 'bg-white dark:bg-xcard text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-xborder'
+        }`;
 
-      // Use a mid-tier resolution for the inline preview player so it loads faster
-      const previewRes = resList.length >= 3
-        ? resList[Math.floor(resList.length / 2)]
-        : resList[0];
+        const icon = document.createElement('i');
+        icon.className = vid.type === 'gif' ? 'fa-solid fa-repeat' : 'fa-solid fa-film';
+        icon.setAttribute('aria-hidden', 'true');
+
+        const label = document.createElement('span');
+        label.textContent = vid.type === 'gif' ? `GIF ${idx + 1}` : `Video ${idx + 1}`;
+
+        btn.append(icon, label);
+        btn.onclick = () => {
+          if (activeVideoIndex !== idx) {
+            stopInlineVideo();
+            activeVideoIndex = idx;
+            renderMultiVideoTabs();
+            renderActiveVideoMedia();
+          }
+        };
+        tabsContainer.appendChild(btn);
+      });
+
+      const hasAnyMp4 = currentTweetData.videos.some(v => !v.isHlsOnly && v.resolutions?.length > 0);
+      if (hasAnyMp4) {
+        dlAllBtn.classList.remove('hidden');
+      } else {
+        dlAllBtn.classList.add('hidden');
+      }
+
+      bar.classList.remove('hidden');
+    }
+
+    function renderActiveVideoMedia() {
+      if (!currentTweetData || !currentTweetData.videos?.length) return;
+
+      abortSizeProbes();
+      sizeProbeController = new AbortController();
+      const probeSignal = sizeProbeController.signal;
+
+      const activeVid = currentTweetData.videos[activeVideoIndex];
+      const resList = activeVid.resolutions || [];
+      const highestRes = resList[resList.length - 1] || {
+        width: activeVid.width || 720,
+        height: activeVid.height || 1280,
+        url: activeVid.hlsUrl || ''
+      };
 
       // Responsive layout adaptation: widen preview frame for landscape videos
       const isLandscape = highestRes.width > highestRes.height;
@@ -1272,14 +2308,11 @@
         playerMetaBar.className = "w-full max-w-[260px] mt-2.5 flex items-center justify-between gap-2 text-[11px] text-gray-400";
       }
 
-      // Configure Inline Video Player
+      // Reset player error overlay
+      document.getElementById('playerErrorOverlay').classList.add('hidden');
       const player = document.getElementById('inlineVideoPlayer');
       player.loop = activeVid.type === 'gif';
       player.poster = isSafeHttpsUrl(activeVid.thumb) ? activeVid.thumb : '';
-      player.src = isSafeHttpsUrl(previewRes.url) ? previewRes.url : '';
-
-      document.getElementById('previewQualityHint').textContent =
-        `Preview (${previewRes.width}×${previewRes.height})`;
 
       // Overlay badges (GIF + Duration)
       const gifBadge = document.getElementById('gifBadge');
@@ -1306,9 +2339,63 @@
         thumbBtn.classList.add('hidden');
       }
 
-      // Update Direct Stream Box (Points to highest quality by default)
+      const mp4FormatsContainer = document.getElementById('mp4FormatsContainer');
+      const hlsContainer = document.getElementById('hlsStreamContainer');
+      const directStreamBox = document.getElementById('directStreamBox');
+      const gifExportContainer = document.getElementById('gifExportContainer');
+
+      // Handle HLS-Only (.m3u8) Streams Cleanly
+      if (activeVid.isHlsOnly || resList.length === 0) {
+        mp4FormatsContainer.classList.add('hidden');
+        directStreamBox.classList.add('hidden');
+        gifExportContainer.classList.add('hidden');
+        hlsContainer.classList.remove('hidden');
+
+        previewCandidateUrls = isSafeHttpsUrl(activeVid.hlsUrl)
+          ? [{ url: activeVid.hlsUrl, width: highestRes.width, height: highestRes.height }]
+          : [];
+        previewCandidateIndex = 0;
+
+        if (isSafeHttpsUrl(activeVid.hlsUrl)) {
+          player.src = activeVid.hlsUrl;
+          document.getElementById('hlsOpenLink').href = activeVid.hlsUrl;
+          document.getElementById('previewQualityHint').textContent = "HLS stream (.m3u8)";
+        } else {
+          player.removeAttribute('src');
+          player.load();
+          document.getElementById('previewQualityHint').textContent = "Unavailable";
+        }
+        return;
+      }
+
+      // Standard MP4 Mode
+      hlsContainer.classList.add('hidden');
+      mp4FormatsContainer.classList.remove('hidden');
+      directStreamBox.classList.remove('hidden');
+
+      // Build ordered preview fallback list (mid-tier first, then others)
+      const previewRes = resList.length >= 3
+        ? resList[Math.floor(resList.length / 2)]
+        : resList[0];
+
+      previewCandidateUrls = [previewRes, ...resList.filter(r => r.url !== previewRes.url).reverse()]
+        .filter(r => isSafeHttpsUrl(r.url));
+      previewCandidateIndex = 0;
+
+      player.src = previewCandidateUrls[0]?.url || '';
+      document.getElementById('previewQualityHint').textContent =
+        `Preview (${previewRes.width}×${previewRes.height})`;
+
+      // Direct CDN Stream Box (highest quality by default)
       document.getElementById('directUrlInput').value = highestRes.url;
       document.getElementById('openRawLink').href = highestRes.url;
+
+      // Real .GIF export visibility (for GIFs or short clips <= 15s)
+      if (activeVid.type === 'gif' || (activeVid.duration > 0 && activeVid.duration <= 15)) {
+        gifExportContainer.classList.remove('hidden');
+      } else {
+        gifExportContainer.classList.add('hidden');
+      }
 
       // Populate Quality Buttons (Sorted Highest to Lowest)
       const btnContainer = document.getElementById('downloadButtonsList');
@@ -1317,49 +2404,45 @@
       const sortedDesc = [...resList].reverse();
       const sizeTagEntries = [];
 
+      // Check if multiple variants share the exact same WxH so we can show bitrate disambiguator
+      const dimCounts = new Map();
+      sortedDesc.forEach(r => {
+        const k = `${r.width}x${r.height}`;
+        dimCounts.set(k, (dimCounts.get(k) || 0) + 1);
+      });
+
       sortedDesc.forEach((res, index) => {
-        const maxDim = Math.max(res.width, res.height);
-        const minDim = Math.min(res.width, res.height);
-        let qualityBadge = "SD";
-        let badgeColor = "bg-white/20 text-white";
-
-        if (activeVid.type === 'gif') {
-          qualityBadge = "GIF MP4";
-          badgeColor = "bg-purple-300 text-gray-900 font-bold";
-        } else if (maxDim >= 1920 || minDim >= 1080) {
-          qualityBadge = "FULL HD";
-          badgeColor = "bg-amber-400 text-gray-900 font-bold";
-        } else if (maxDim >= 1280 || minDim >= 720) {
-          qualityBadge = "HD 720p";
-          badgeColor = "bg-green-400 text-gray-900 font-bold";
-        }
-
+        const { label: qualityBadge, cls: badgeColor } = getQualityBadge(res, activeVid.type);
         const estSize = estimateFileSize(res.bitrate, activeVid.duration);
+        const dlKey = getDownloadKey(currentTweetData.id, activeVideoIndex, res);
+        const isCompleted = completedDownloadKeys.has(dlKey);
+        const existingActive = activeDownloads.get(dlKey);
 
-        // Wrapper holding button row + live streamed download progress bar
         const itemWrapper = document.createElement('div');
         itemWrapper.className = "space-y-1.5";
 
         const row = document.createElement('div');
-        row.className = "flex items-center space-x-2";
+        row.className = "flex items-center space-x-1.5";
 
         // Download Quality Button
         const dlBtn = document.createElement('button');
         dlBtn.type = "button";
-        dlBtn.className = "flex-1 bg-xblue hover:bg-xbluehover active:scale-[0.99] text-white font-semibold py-3 px-3 sm:px-4 rounded-xl shadow-sm text-xs sm:text-sm flex items-center justify-between gap-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-xblue";
+        dlBtn.className = "flex-1 bg-xblue hover:bg-xbluehover active:scale-[0.99] text-white font-semibold py-3 px-3 sm:px-3.5 rounded-xl shadow-sm text-xs sm:text-sm flex items-center justify-between gap-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-xblue min-w-0";
 
         const leftSpan = document.createElement('span');
-        leftSpan.className = "flex items-center space-x-2 min-w-0";
+        leftSpan.className = "flex items-center space-x-1.5 sm:space-x-2 min-w-0";
 
         const dlIcon = document.createElement('i');
-        dlIcon.className = "fa-solid fa-download shrink-0";
+        dlIcon.className = isCompleted ? "fa-solid fa-circle-check shrink-0 text-green-200" : "fa-solid fa-download shrink-0";
         dlIcon.setAttribute('aria-hidden', 'true');
 
         const resText = document.createElement('span');
         resText.className = "truncate";
-        resText.textContent = `${res.width} × ${res.height}`;
+        const hasDuplicateDims = (dimCounts.get(`${res.width}x${res.height}`) || 0) > 1;
+        resText.textContent = hasDuplicateDims && res.bitrate > 0
+          ? `${res.width} × ${res.height} (${(res.bitrate / 1000000).toFixed(1)}M)`
+          : `${res.width} × ${res.height}`;
 
-        // File size pill right next to the resolution (visible on mobile & desktop)
         const sizeTag = document.createElement('span');
         sizeTag.className = "text-[11px] bg-black/20 text-white/95 px-1.5 py-0.5 rounded font-mono shrink-0";
         if (res.exactBytes > 0) {
@@ -1376,7 +2459,12 @@
 
         leftSpan.append(dlIcon, resText, sizeTag);
 
-        if (index === 0 && sortedDesc.length > 1) {
+        if (isCompleted) {
+          const savedTag = document.createElement('span');
+          savedTag.className = "text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded font-semibold hidden sm:inline shrink-0";
+          savedTag.textContent = "Saved ✓";
+          leftSpan.appendChild(savedTag);
+        } else if (index === 0 && sortedDesc.length > 1) {
           const bestTag = document.createElement('span');
           bestTag.className = "text-[10px] bg-white/20 px-1.5 py-0.5 rounded hidden sm:inline shrink-0";
           bestTag.textContent = "Best";
@@ -1395,7 +2483,27 @@
 
         // Kick off lightweight HEAD size probe
         sizeTagEntries.push({ res, sizeTag });
-        probeResolutionFileSize(res, activeVid, sizeTag, probeSignal);
+        probeResolutionFileSize(res, activeVid, sizeTag, probeSignal, currentTweetData.id);
+
+        // Preview This Resolution in Inline Player Button
+        const previewBtn = document.createElement('button');
+        previewBtn.type = "button";
+        previewBtn.title = `Preview ${res.width}x${res.height} in player`;
+        previewBtn.setAttribute('aria-label', `Preview ${res.width} by ${res.height} stream`);
+        previewBtn.className = "p-3 bg-gray-100 dark:bg-xdark hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl border border-gray-200 dark:border-xborder transition shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue";
+        const previewIcon = document.createElement('i');
+        previewIcon.className = "fa-solid fa-play text-xs";
+        previewIcon.setAttribute('aria-hidden', 'true');
+        previewBtn.appendChild(previewIcon);
+        previewBtn.onclick = () => {
+          if (!isSafeHttpsUrl(res.url)) return;
+          document.getElementById('playerErrorOverlay').classList.add('hidden');
+          player.src = res.url;
+          player.play().catch(() => {});
+          document.getElementById('previewQualityHint').textContent = `Preview (${res.width}×${res.height})`;
+          document.getElementById('directUrlInput').value = res.url;
+          document.getElementById('openRawLink').href = res.url;
+        };
 
         // Copy Specific Resolution URL Button
         const copyBtn = document.createElement('button');
@@ -1409,14 +2517,14 @@
         copyIcon.setAttribute('aria-hidden', 'true');
         copyBtn.appendChild(copyIcon);
 
-        copyBtn.onclick = () => {
-          copyToClipboard(res.url);
+        copyBtn.onclick = async () => {
+          const ok = await copyToClipboard(res.url);
           document.getElementById('directUrlInput').value = res.url;
           document.getElementById('openRawLink').href = res.url;
-          showToast(`Copied ${res.width}×${res.height} direct URL!`);
+          showToast(ok ? `Copied ${res.width}×${res.height} direct URL!` : "Copy failed — select and copy manually", !ok);
         };
 
-        // Streamed Download Progress Bar Container (Hidden until downloading)
+        // Streamed Download Progress Bar Container
         const progressBox = document.createElement('div');
         progressBox.className = "hidden bg-gray-50 dark:bg-xdark border border-gray-200 dark:border-xborder rounded-xl p-2.5 space-y-1.5";
 
@@ -1444,9 +2552,28 @@
 
         progressBox.append(progressHeader, track);
 
-        // Wire up streamed download with progress + cancellation + size sync
+        // If this resolution already has an active background download (after switching tabs), bind to it!
+        if (existingActive) {
+          dlBtn.disabled = true;
+          dlBtn.classList.add('opacity-70', 'cursor-wait');
+          progressBox.classList.remove('hidden');
+          bar.style.width = `${existingActive.pct || 4}%`;
+          progressLabel.textContent = existingActive.statusText || "Downloading...";
+          cancelDlBtn.onclick = () => {
+            existingActive.abortReason = 'user';
+            existingActive.controller.abort();
+          };
+          existingActive.ui = { btnElement: dlBtn, progressBox, progressLabel, progressBar: bar, cancelBtn: cancelDlBtn, sizeTag, dlIcon };
+        }
+
         dlBtn.onclick = () => triggerStreamedDownload({
+          dlKey,
+          tweetId: currentTweetData.id,
+          videoIndex: activeVideoIndex,
+          totalVideos: currentTweetData.videos.length,
+          authorHandle: currentTweetData.authorHandle,
           btnElement: dlBtn,
+          dlIcon,
           progressBox,
           progressLabel,
           progressBar: bar,
@@ -1458,12 +2585,12 @@
           height: res.height
         });
 
-        row.append(dlBtn, copyBtn);
+        row.append(dlBtn, previewBtn, copyBtn);
         itemWrapper.append(row, progressBox);
         btnContainer.appendChild(itemWrapper);
       });
 
-      // Fallback: if API omitted duration, calculate estimates once the video player loads duration metadata
+      // Fallback: if API omitted duration, calculate estimates once the video player loads metadata
       player.onloadedmetadata = () => {
         if (!activeVid.duration && Number.isFinite(player.duration) && player.duration > 0) {
           activeVid.duration = player.duration;
@@ -1471,6 +2598,9 @@
           if (loadedDurText && activeVid.type !== 'gif') {
             durationBadge.textContent = loadedDurText;
             durationBadge.classList.remove('hidden');
+          }
+          if (activeVid.duration <= 15) {
+            gifExportContainer.classList.remove('hidden');
           }
           sizeTagEntries.forEach(({ res, sizeTag }) => {
             if (!res.exactBytes && res.bitrate > 0) {
@@ -1484,20 +2614,38 @@
           });
         }
       };
-
-      document.getElementById('resultSection').classList.remove('hidden');
     }
 
     /* =========================================================================
-     * STREAMED DOWNLOAD ENGINE (LIVE PROGRESS + CANCELLATION + FALLBACK)
+     * STREAMED DOWNLOAD ENGINE (FILE SYSTEM STREAMING + SPEED/ETA + RESILIENT FALLBACK)
      * ========================================================================= */
+    function getDownloadKey(tweetId, videoIdx, res) {
+      return `${tweetId}_${videoIdx}_${res.width}x${res.height}_${res.bitrate || 0}`;
+    }
+
     function abortAllDownloads() {
-      activeDownloadControllers.forEach(ctrl => ctrl.abort());
-      activeDownloadControllers.clear();
+      activeDownloads.forEach(entry => {
+        entry.abortReason = 'user';
+        entry.controller.abort();
+      });
+      activeDownloads.clear();
+      updateActiveDownloadsBanner();
+    }
+
+    function abortAllDownloadsWithToast() {
+      if (activeDownloads.size === 0) return;
+      abortAllDownloads();
+      showToast("All active downloads cancelled", true);
     }
 
     async function triggerStreamedDownload({
+      dlKey,
+      tweetId,
+      videoIndex,
+      totalVideos,
+      authorHandle,
       btnElement,
+      dlIcon,
       progressBox,
       progressLabel,
       progressBar,
@@ -1510,98 +2658,235 @@
     }) {
       if (!isSafeHttpsUrl(url)) {
         showToast("Invalid media URL", true);
-        return;
+        return false;
+      }
+
+      const key = dlKey || `${tweetId || 'x'}_${videoIndex || 0}_${width}x${height}`;
+      if (activeDownloads.has(key)) {
+        showToast("This quality is already downloading");
+        return false;
+      }
+
+      const filename = buildMediaFilename({
+        handle: authorHandle || currentTweetData?.authorHandle || 'user',
+        id: tweetId || currentTweetData?.id || String(Date.now()),
+        index: videoIndex ?? activeVideoIndex,
+        totalCount: totalVideos ?? (currentTweetData?.videos?.length || 1),
+        resLabel: `${width}x${height}`,
+        ext: 'mp4'
+      });
+
+      // Acquire File System Access Save Picker synchronously during the user gesture if desired
+      let fileWritable = null;
+      const shouldUsePicker = typeof window.showSaveFilePicker === 'function' &&
+        (appSettings.preferSavePicker || (res && res.exactBytes >= LARGE_FILE_PICKER_THRESHOLD));
+
+      if (shouldUsePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{ description: 'MP4 Video', accept: { 'video/mp4': ['.mp4'] } }]
+          });
+          fileWritable = await handle.createWritable();
+        } catch (pickerErr) {
+          if (pickerErr && pickerErr.name === 'AbortError') {
+            showToast("Save cancelled");
+            return false;
+          }
+          fileWritable = null;
+        }
+      } else if (res && res.exactBytes >= MOBILE_MEMORY_WARN_THRESHOLD) {
+        // Guard mobile/low-memory browsers from buffering 150MB+ into JS RAM
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast("Large file opened natively to avoid mobile memory limits");
+        return true;
       }
 
       const controller = new AbortController();
-      activeDownloadControllers.add(controller);
+      const entry = {
+        controller,
+        abortReason: '',
+        pct: 4,
+        statusText: fileWritable ? "Streaming directly to disk..." : "Connecting to CDN...",
+        ui: { btnElement, dlIcon, progressBox, progressLabel, progressBar, cancelBtn, sizeTag }
+      };
+      activeDownloads.set(key, entry);
+      updateActiveDownloadsBanner();
 
-      btnElement.disabled = true;
-      btnElement.classList.add('opacity-70', 'cursor-wait');
-      progressBox.classList.remove('hidden');
-      progressBar.style.width = "4%";
-      progressLabel.textContent = "Connecting to CDN...";
-
-      cancelBtn.onclick = () => {
-        controller.abort();
+      const syncUI = () => {
+        if (!entry.ui) return;
+        if (entry.ui.progressBar) entry.ui.progressBar.style.width = `${entry.pct}%`;
+        if (entry.ui.progressLabel) entry.ui.progressLabel.textContent = entry.statusText;
       };
 
-      // Collision-free filename including handle, Tweet ID, multi-video index, and resolution
-      const safeHandle = sanitizeFilenamePart(currentTweetData?.authorHandle, 'user');
-      const safeId = sanitizeFilenamePart(currentTweetData?.id, String(Date.now()));
-      const idxSuffix = (currentTweetData?.videos?.length || 1) > 1 ? `_v${activeVideoIndex + 1}` : '';
-      const filename = `X_${safeHandle}_${safeId}${idxSuffix}_${width}x${height}.mp4`;
+      if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.classList.add('opacity-70', 'cursor-wait');
+      }
+      if (progressBox) progressBox.classList.remove('hidden');
+      syncUI();
 
+      if (cancelBtn) {
+        cancelBtn.onclick = () => {
+          entry.abortReason = 'user';
+          controller.abort();
+        };
+      }
+
+      let stallTimer = null;
+      const resetStallTimer = () => {
+        clearTimeout(stallTimer);
+        stallTimer = setTimeout(() => {
+          entry.abortReason = 'stall';
+          controller.abort();
+        }, STALL_TIMEOUT_MS);
+      };
+
+      let succeeded = false;
       try {
+        resetStallTimer();
         const response = await fetch(url, { signal: controller.signal });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const contentLengthHeader = response.headers.get('content-length');
         const totalBytes = contentLengthHeader ? parseInt(contentLengthHeader, 10) : 0;
 
-        // Immediately sync exact file size onto the button pill if Content-Length is available
-        if (totalBytes > 0 && res && sizeTag) {
+        if (totalBytes > 0 && res) {
           res.exactBytes = totalBytes;
-          sizeTag.textContent = formatFileSize(totalBytes);
-          sizeTag.title = `Exact file size (${totalBytes.toLocaleString()} bytes)`;
-          sizeTag.classList.remove('hidden', 'animate-pulse');
+          if (entry.ui?.sizeTag) {
+            entry.ui.sizeTag.textContent = formatFileSize(totalBytes);
+            entry.ui.sizeTag.title = `Exact file size (${totalBytes.toLocaleString()} bytes)`;
+            entry.ui.sizeTag.classList.remove('hidden', 'animate-pulse');
+          }
+          if (tweetId && currentTweetData && currentTweetData.id === tweetId && !currentTweetData.isSampleFallback) {
+            persistHistoryExactSizes(tweetId, currentTweetData.videos);
+          }
         }
 
-        let blob;
+        let receivedBytes = 0;
+
         if (response.body && typeof response.body.getReader === 'function') {
           const reader = response.body.getReader();
-          const chunks = [];
-          let receivedBytes = 0;
+          const chunks = fileWritable ? null : [];
+
+          let lastSampleTime = performance.now();
+          let lastSampleBytes = 0;
+          let emaSpeed = 0;
 
           while (true) {
+            resetStallTimer();
             const { done, value } = await reader.read();
             if (done) break;
 
-            chunks.push(value);
             receivedBytes += value.byteLength;
+            if (fileWritable) {
+              await fileWritable.write(value);
+            } else {
+              chunks.push(value);
+            }
 
+            const now = performance.now();
+            const dtMs = now - lastSampleTime;
+            if (dtMs >= 250) {
+              const instSpeed = ((receivedBytes - lastSampleBytes) / dtMs) * 1000;
+              emaSpeed = emaSpeed > 0 ? emaSpeed * 0.65 + instSpeed * 0.35 : instSpeed;
+              lastSampleTime = now;
+              lastSampleBytes = receivedBytes;
+            }
+
+            const speedStr = emaSpeed > 0 ? ` • ${formatSpeed(emaSpeed)}` : '';
             if (totalBytes > 0) {
               const pct = Math.min(100, Math.round((receivedBytes / totalBytes) * 100));
-              progressBar.style.width = `${pct}%`;
-              progressLabel.textContent = `Downloading ${pct}% • ${formatBytesMB(receivedBytes)} / ${formatBytesMB(totalBytes)}`;
+              const etaSec = emaSpeed > 0 ? (totalBytes - receivedBytes) / emaSpeed : NaN;
+              const etaStr = Number.isFinite(etaSec) && etaSec > 0.5 ? ` • ${formatEta(etaSec)} left` : '';
+              entry.pct = pct;
+              entry.statusText = `${pct}% • ${formatBytesMB(receivedBytes)} / ${formatBytesMB(totalBytes)}${speedStr}${etaStr}`;
             } else {
-              progressBar.style.width = "65%";
-              progressLabel.textContent = `Downloading... ${formatBytesMB(receivedBytes)}`;
+              entry.pct = 65;
+              entry.statusText = `Downloading... ${formatBytesMB(receivedBytes)}${speedStr}`;
             }
+            syncUI();
           }
 
-          blob = new Blob(chunks, { type: 'video/mp4' });
+          clearTimeout(stallTimer);
+
+          if (fileWritable) {
+            await fileWritable.close();
+            fileWritable = null;
+          } else {
+            const blob = new Blob(chunks, { type: 'video/mp4' });
+            chunks.length = 0;
+
+            if (blob.size > 0 && res) {
+              res.exactBytes = blob.size;
+              if (entry.ui?.sizeTag) {
+                entry.ui.sizeTag.textContent = formatFileSize(blob.size);
+                entry.ui.sizeTag.title = `Exact file size (${blob.size.toLocaleString()} bytes)`;
+                entry.ui.sizeTag.classList.remove('hidden', 'animate-pulse');
+              }
+            }
+
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+          }
         } else {
-          progressLabel.textContent = "Downloading MP4...";
-          blob = await response.blob();
+          entry.statusText = "Downloading MP4...";
+          syncUI();
+          const blob = await response.blob();
+          clearTimeout(stallTimer);
+
+          if (fileWritable) {
+            await fileWritable.write(blob);
+            await fileWritable.close();
+            fileWritable = null;
+          } else {
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+          }
         }
 
-        // Sync final exact blob size onto the resolution pill
-        if (blob && blob.size > 0 && res && sizeTag) {
-          res.exactBytes = blob.size;
-          sizeTag.textContent = formatFileSize(blob.size);
-          sizeTag.title = `Exact file size (${blob.size.toLocaleString()} bytes)`;
-          sizeTag.classList.remove('hidden', 'animate-pulse');
+        entry.pct = 100;
+        entry.statusText = "Complete! File saved.";
+        syncUI();
+        completedDownloadKeys.add(key);
+        if (entry.ui?.dlIcon) {
+          entry.ui.dlIcon.className = "fa-solid fa-circle-check shrink-0 text-green-200";
         }
-
-        progressBar.style.width = "100%";
-        progressLabel.textContent = "Complete! Saving file...";
-
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
-
         showToast(`Saved ${filename}`);
+        succeeded = true;
       } catch (err) {
-        if (err.name === 'AbortError') {
-          showToast("Download cancelled", true);
+        clearTimeout(stallTimer);
+        if (fileWritable) {
+          try { await fileWritable.abort(); } catch {}
+          fileWritable = null;
+        }
+        if (err && err.name === 'AbortError') {
+          if (entry.abortReason === 'stall') {
+            showToast("Download stalled after 30s — please retry", true);
+          } else {
+            showToast("Download cancelled", true);
+          }
         } else {
-          console.warn("Direct streamed download blocked by CORS, falling back to new tab:", err);
+          console.warn("Direct streamed download blocked or failed, falling back to new tab:", err);
           const a = document.createElement('a');
           a.href = url;
           a.target = '_blank';
@@ -1610,16 +2895,70 @@
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
-          showToast("Opened video in new tab (Right-click → Save Video As)");
+          showToast("Opened video in new tab (Save Video As)");
         }
       } finally {
-        activeDownloadControllers.delete(controller);
-        btnElement.disabled = false;
-        btnElement.classList.remove('opacity-70', 'cursor-wait');
-        setTimeout(() => {
-          progressBox.classList.add('hidden');
-          progressBar.style.width = "0%";
-        }, 700);
+        clearTimeout(stallTimer);
+        activeDownloads.delete(key);
+        updateActiveDownloadsBanner();
+        if (entry.ui?.btnElement) {
+          entry.ui.btnElement.disabled = false;
+          entry.ui.btnElement.classList.remove('opacity-70', 'cursor-wait');
+        }
+        if (entry.ui?.progressBox) {
+          const box = entry.ui.progressBox;
+          const bar = entry.ui.progressBar;
+          setTimeout(() => {
+            box.classList.add('hidden');
+            if (bar) bar.style.width = "0%";
+          }, 700);
+        }
+      }
+      return succeeded;
+    }
+
+    async function downloadAllVideos() {
+      if (!currentTweetData || !Array.isArray(currentTweetData.videos)) return;
+      const mp4Videos = currentTweetData.videos
+        .map((vid, idx) => ({ vid, idx }))
+        .filter(({ vid }) => !vid.isHlsOnly && vid.resolutions?.length > 0);
+
+      if (mp4Videos.length === 0) {
+        showToast("No direct MP4 videos available to download", true);
+        return;
+      }
+
+      const btn = document.getElementById('downloadAllVideosBtn');
+      btn.disabled = true;
+      btn.classList.add('opacity-70');
+
+      let savedCount = 0;
+      try {
+        for (let i = 0; i < mp4Videos.length; i++) {
+          const { vid, idx } = mp4Videos[i];
+          const best = vid.resolutions[vid.resolutions.length - 1];
+          const dlKey = getDownloadKey(currentTweetData.id, idx, best);
+          showToast(`Downloading video ${i + 1} of ${mp4Videos.length}...`);
+
+          const ok = await triggerStreamedDownload({
+            dlKey,
+            tweetId: currentTweetData.id,
+            videoIndex: idx,
+            totalVideos: currentTweetData.videos.length,
+            authorHandle: currentTweetData.authorHandle,
+            res: best,
+            url: best.url,
+            width: best.width,
+            height: best.height
+          });
+          if (ok) savedCount++;
+        }
+        if (savedCount > 0) {
+          showToast(`Saved ${savedCount} of ${mp4Videos.length} videos`);
+        }
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-70');
       }
     }
 
@@ -1630,13 +2969,41 @@
         return;
       }
 
-      const safeHandle = sanitizeFilenamePart(currentTweetData.authorHandle, 'user');
-      const safeId = sanitizeFilenamePart(currentTweetData.id, 'thumb');
-      const filename = `X_${safeHandle}_${safeId}_cover.jpg`;
+      const btn = document.getElementById('downloadThumbBtn');
+      if (btn.disabled) return;
+      btn.disabled = true;
+      btn.classList.add('opacity-60');
 
       try {
-        const res = await fetch(activeVid.thumb);
-        if (!res.ok) throw new Error("CORS blocked");
+        const origUrl = upgradeTwitterImageUrl(activeVid.thumb, 'orig') || activeVid.thumb;
+        let res = null;
+        try {
+          res = await fetch(origUrl);
+          if (!res.ok && origUrl !== activeVid.thumb) {
+            res = await fetch(activeVid.thumb);
+          }
+        } catch {
+          res = null;
+        }
+
+        if (!res || !res.ok) throw new Error("CORS or fetch failed");
+
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+        let ext = 'jpg';
+        if (ct.includes('png')) ext = 'png';
+        else if (ct.includes('webp')) ext = 'webp';
+        else if (/[?&]format=png/i.test(res.url)) ext = 'png';
+        else if (/[?&]format=webp/i.test(res.url)) ext = 'webp';
+
+        const filename = buildMediaFilename({
+          handle: currentTweetData.authorHandle,
+          id: currentTweetData.id,
+          index: activeVideoIndex,
+          totalCount: currentTweetData.videos.length,
+          resLabel: 'cover',
+          ext
+        });
+
         const blob = await res.blob();
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1645,20 +3012,194 @@
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
         showToast(`Saved ${filename}`);
       } catch {
         window.open(activeVid.thumb, '_blank', 'noopener,noreferrer');
         showToast("Opened cover thumbnail in new tab");
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-60');
       }
     }
 
-    function copyDirectUrl() {
+    /* =========================================================================
+     * PHOTO GALLERY FALLBACK & DOWNLOADS
+     * ========================================================================= */
+    function renderPhotoGallery() {
+      const grid = document.getElementById('photoGalleryGrid');
+      const header = document.getElementById('photoCountHeader');
+      const photos = currentTweetData?.photos || [];
+      grid.textContent = '';
+
+      header.textContent = `${photos.length} Photo${photos.length === 1 ? '' : 's'} Found`;
+
+      photos.forEach((photo, idx) => {
+        const card = document.createElement('div');
+        card.className = "rounded-xl border border-gray-200 dark:border-xborder bg-gray-50 dark:bg-xdark overflow-hidden flex flex-col";
+
+        const imgWrap = document.createElement('div');
+        imgWrap.className = "relative bg-black/5 dark:bg-black/40 aspect-video flex items-center justify-center overflow-hidden";
+
+        const img = document.createElement('img');
+        img.src = photo.previewUrl;
+        img.alt = photo.altText || `Photo ${idx + 1}`;
+        img.loading = "lazy";
+        img.className = "w-full h-full object-contain max-h-64";
+        imgWrap.appendChild(img);
+
+        if (photo.width > 0 && photo.height > 0) {
+          const dimBadge = document.createElement('span');
+          dimBadge.className = "absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/75 text-white text-[10px] font-mono font-semibold";
+          dimBadge.textContent = `${photo.width}×${photo.height}`;
+          imgWrap.appendChild(dimBadge);
+        }
+
+        const actions = document.createElement('div');
+        actions.className = "p-2.5 flex items-center gap-2";
+
+        const saveBtn = document.createElement('button');
+        saveBtn.type = "button";
+        saveBtn.className = "flex-1 py-2 px-3 rounded-lg bg-xblue hover:bg-xbluehover text-white text-xs font-semibold transition flex items-center justify-center space-x-1.5";
+        const dlIcon = document.createElement('i');
+        dlIcon.className = "fa-solid fa-download text-[11px]";
+        dlIcon.setAttribute('aria-hidden', 'true');
+        const dlText = document.createElement('span');
+        dlText.textContent = "Save Full-Res";
+        saveBtn.append(dlIcon, dlText);
+        saveBtn.onclick = () => downloadSinglePhoto(photo, idx, saveBtn);
+
+        const copyBtn = document.createElement('button');
+        copyBtn.type = "button";
+        copyBtn.title = "Copy full-resolution image URL";
+        copyBtn.setAttribute('aria-label', `Copy photo ${idx + 1} URL`);
+        copyBtn.className = "p-2 rounded-lg bg-white dark:bg-xcard border border-gray-200 dark:border-xborder hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition";
+        const cpIcon = document.createElement('i');
+        cpIcon.className = "fa-regular fa-copy text-xs";
+        cpIcon.setAttribute('aria-hidden', 'true');
+        copyBtn.appendChild(cpIcon);
+        copyBtn.onclick = async () => {
+          const ok = await copyToClipboard(photo.fullUrl || photo.previewUrl);
+          showToast(ok ? "Full-res photo URL copied!" : "Copy failed — select and copy manually", !ok);
+        };
+
+        actions.append(saveBtn, copyBtn);
+        card.append(imgWrap, actions);
+        grid.appendChild(card);
+      });
+    }
+
+    async function downloadSinglePhoto(photo, idx, btnEl) {
+      const targetUrl = isSafeHttpsUrl(photo.fullUrl) ? photo.fullUrl : photo.previewUrl;
+      if (!isSafeHttpsUrl(targetUrl)) return false;
+
+      if (btnEl) btnEl.disabled = true;
+      try {
+        let res = await fetch(targetUrl);
+        if (!res.ok && targetUrl !== photo.previewUrl && isSafeHttpsUrl(photo.previewUrl)) {
+          res = await fetch(photo.previewUrl);
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+        let ext = 'jpg';
+        if (ct.includes('png') || /[?&]format=png/i.test(targetUrl)) ext = 'png';
+        else if (ct.includes('webp') || /[?&]format=webp/i.test(targetUrl)) ext = 'webp';
+
+        const filename = buildMediaFilename({
+          handle: currentTweetData?.authorHandle || 'user',
+          id: currentTweetData?.id || String(Date.now()),
+          index: idx,
+          totalCount: currentTweetData?.photos?.length || 1,
+          resLabel: photo.width && photo.height ? `${photo.width}x${photo.height}` : 'orig',
+          ext
+        });
+
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        showToast(`Saved ${filename}`);
+        return true;
+      } catch {
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        showToast("Opened photo in new tab");
+        return false;
+      } finally {
+        if (btnEl) btnEl.disabled = false;
+      }
+    }
+
+    async function downloadAllPhotos() {
+      const photos = currentTweetData?.photos || [];
+      if (!photos.length) return;
+
+      const btn = document.getElementById('saveAllPhotosBtn');
+      btn.disabled = true;
+      btn.classList.add('opacity-70');
+      try {
+        for (let i = 0; i < photos.length; i++) {
+          showToast(`Saving photo ${i + 1} of ${photos.length}...`);
+          await downloadSinglePhoto(photos[i], i, null);
+        }
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-70');
+      }
+    }
+
+    /* =========================================================================
+     * CLIPBOARD & HLS COMMAND HELPERS
+     * ========================================================================= */
+    async function copyDirectUrl() {
       const input = document.getElementById('directUrlInput');
       if (input.value) {
-        copyToClipboard(input.value);
-        showToast("Direct MP4 stream link copied!");
+        const ok = await copyToClipboard(input.value);
+        showToast(ok ? "Direct MP4 stream link copied!" : "Copy failed — select and copy manually", !ok);
       }
+    }
+
+    async function copyTweetCaption() {
+      if (!currentTweetData?.text) return;
+      const ok = await copyToClipboard(currentTweetData.text);
+      showToast(ok ? "Post caption copied!" : "Copy failed — select and copy manually", !ok);
+    }
+
+    async function copyHlsUrl() {
+      const activeVid = currentTweetData?.videos?.[activeVideoIndex];
+      if (!activeVid?.hlsUrl) return;
+      const ok = await copyToClipboard(activeVid.hlsUrl);
+      showToast(ok ? "HLS .m3u8 stream URL copied!" : "Copy failed — select and copy manually", !ok);
+    }
+
+    async function copyFfmpegCommand() {
+      const activeVid = currentTweetData?.videos?.[activeVideoIndex];
+      if (!activeVid?.hlsUrl) return;
+      const filename = buildMediaFilename({
+        handle: currentTweetData.authorHandle,
+        id: currentTweetData.id,
+        index: activeVideoIndex,
+        totalCount: currentTweetData.videos.length,
+        resLabel: 'hls',
+        ext: 'mp4'
+      });
+      const cmd = `ffmpeg -i "${activeVid.hlsUrl}" -c copy "${filename}"`;
+      const ok = await copyToClipboard(cmd);
+      showToast(ok ? "ffmpeg command copied!" : "Copy failed — select and copy manually", !ok);
+    }
+
+    async function copyYtdlpCommand() {
+      if (!currentTweetData?.id) return;
+      const safeHandle = sanitizeFilenamePart(currentTweetData.authorHandle, 'i');
+      const tweetUrl = `https://x.com/${safeHandle}/status/${currentTweetData.id}`;
+      const cmd = `yt-dlp "${tweetUrl}"`;
+      const ok = await copyToClipboard(cmd);
+      showToast(ok ? "yt-dlp command copied!" : "Copy failed — select and copy manually", !ok);
     }
 
     function stopInlineVideo() {
@@ -1669,11 +3210,407 @@
         player.removeAttribute('poster');
         player.load();
       }
+      document.getElementById('playerErrorOverlay')?.classList.add('hidden');
     }
 
     /* =========================================================================
-     * LOCAL STORAGE HISTORY (XSS-SAFE DOM RENDERING + PER-ITEM DELETE)
+     * PURE-JS CLIENT-SIDE GIF89A ENCODER & VIDEO-TO-GIF EXPORTER
      * ========================================================================= */
+    const GIF_BAYER_4X4 = [
+      [0, 8, 2, 10],
+      [12, 4, 14, 6],
+      [3, 11, 1, 9],
+      [15, 7, 13, 5]
+    ];
+
+    function buildGifPalette256() {
+      const palette = new Uint8Array(256 * 3);
+      const levels = [0, 51, 102, 153, 204, 255];
+      let idx = 0;
+      for (let r = 0; r < 6; r++) {
+        for (let g = 0; g < 6; g++) {
+          for (let b = 0; b < 6; b++) {
+            palette[idx * 3] = levels[r];
+            palette[idx * 3 + 1] = levels[g];
+            palette[idx * 3 + 2] = levels[b];
+            idx++;
+          }
+        }
+      }
+      for (let i = 0; i < 40; i++) {
+        const v = Math.round((i * 255) / 39);
+        palette[idx * 3] = v;
+        palette[idx * 3 + 1] = v;
+        palette[idx * 3 + 2] = v;
+        idx++;
+      }
+      return palette;
+    }
+
+    function quantizeRgbaFrame(rgba, width, height, palette) {
+      const len = width * height;
+      const out = new Uint8Array(len);
+      for (let y = 0; y < height; y++) {
+        const bayerRow = GIF_BAYER_4X4[y & 3];
+        for (let x = 0; x < width; x++) {
+          const p = (y * width + x) * 4;
+          const r = rgba[p];
+          const g = rgba[p + 1];
+          const b = rgba[p + 2];
+          const threshold = ((bayerRow[x & 3] + 0.5) / 16) - 0.5;
+
+          const rq = Math.max(0, Math.min(5, Math.round((r + threshold * 51) / 51)));
+          const gq = Math.max(0, Math.min(5, Math.round((g + threshold * 51) / 51)));
+          const bq = Math.max(0, Math.min(5, Math.round((b + threshold * 51) / 51)));
+          const cubeIdx = rq * 36 + gq * 6 + bq;
+          const dr = r - palette[cubeIdx * 3];
+          const dg = g - palette[cubeIdx * 3 + 1];
+          const db = b - palette[cubeIdx * 3 + 2];
+          const cubeErr = dr * dr + dg * dg + db * db;
+
+          const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+          const gi = Math.max(0, Math.min(39, Math.round(((lum + threshold * 6.5) / 255) * 39)));
+          const grayIdx = 216 + gi;
+          const gr = r - palette[grayIdx * 3];
+          const gg = g - palette[grayIdx * 3 + 1];
+          const gb = b - palette[grayIdx * 3 + 2];
+          const grayErr = gr * gr + gg * gg + gb * gb;
+
+          out[y * width + x] = grayErr < cubeErr ? grayIdx : cubeIdx;
+        }
+      }
+      return out;
+    }
+
+    function lzwEncodeGifFrame(indices) {
+      const clearCode = 256;
+      const eoiCode = 257;
+      let nextCode = 258;
+      let decoderDictLen = 258;
+      let hasPrev = false;
+      let codeSize = 9;
+      let dict = new Map();
+
+      const out = [];
+      let subBlock = [];
+      let bitBuffer = 0;
+      let bitCount = 0;
+
+      const writeBits = (code, size) => {
+        bitBuffer |= (code << bitCount);
+        bitCount += size;
+        while (bitCount >= 8) {
+          subBlock.push(bitBuffer & 0xff);
+          bitBuffer >>>= 8;
+          bitCount -= 8;
+          if (subBlock.length === 255) {
+            out.push(255, ...subBlock);
+            subBlock = [];
+          }
+        }
+      };
+
+      const emitPrefix = (code) => {
+        writeBits(code, codeSize);
+        if (!hasPrev) {
+          hasPrev = true;
+        } else if (decoderDictLen < 4096) {
+          decoderDictLen++;
+          if (decoderDictLen === (1 << codeSize) && codeSize < 12) {
+            codeSize++;
+          }
+        }
+      };
+
+      writeBits(clearCode, codeSize);
+
+      if (indices.length > 0) {
+        let prefix = indices[0];
+        for (let i = 1; i < indices.length; i++) {
+          const k = indices[i];
+          const key = (prefix << 8) | k;
+          const found = dict.get(key);
+          if (found !== undefined) {
+            prefix = found;
+          } else {
+            emitPrefix(prefix);
+            if (nextCode < 4096) {
+              dict.set(key, nextCode);
+              nextCode++;
+            } else {
+              writeBits(clearCode, codeSize);
+              dict = new Map();
+              nextCode = 258;
+              decoderDictLen = 258;
+              hasPrev = false;
+              codeSize = 9;
+            }
+            prefix = k;
+          }
+        }
+        emitPrefix(prefix);
+      }
+
+      writeBits(eoiCode, codeSize);
+      if (bitCount > 0) {
+        subBlock.push(bitBuffer & 0xff);
+      }
+      if (subBlock.length > 0) {
+        out.push(subBlock.length, ...subBlock);
+      }
+      out.push(0); // Sub-block terminator
+      return out;
+    }
+
+    function encodeGif89a({ width, height, frames, delayCs = 10 }) {
+      const palette = buildGifPalette256();
+      const bytes = [];
+      const pushWord = (v) => {
+        bytes.push(v & 0xff, (v >>> 8) & 0xff);
+      };
+
+      // 1. Header: GIF89a
+      bytes.push(0x47, 0x49, 0x46, 0x38, 0x39, 0x61);
+
+      // 2. Logical Screen Descriptor
+      pushWord(width);
+      pushWord(height);
+      bytes.push(0xf7, 0x00, 0x00);
+
+      // 3. Global Color Table (256 * 3 bytes)
+      for (let i = 0; i < palette.length; i++) {
+        bytes.push(palette[i]);
+      }
+
+      // 4. NETSCAPE2.0 Application Extension (Infinite Loop)
+      bytes.push(
+        0x21, 0xff, 0x0b,
+        0x4e, 0x45, 0x54, 0x53, 0x43, 0x41, 0x50, 0x45, 0x32, 0x2e, 0x30,
+        0x03, 0x01, 0x00, 0x00, 0x00
+      );
+
+      const safeDelay = Math.max(2, Math.round(delayCs));
+
+      // 5. Image Frames
+      for (let f = 0; f < frames.length; f++) {
+        // Graphic Control Extension
+        bytes.push(0x21, 0xf9, 0x04, 0x04);
+        pushWord(safeDelay);
+        bytes.push(0x00, 0x00);
+
+        // Image Descriptor
+        bytes.push(0x2c);
+        pushWord(0);
+        pushWord(0);
+        pushWord(width);
+        pushWord(height);
+        bytes.push(0x00);
+
+        // Image Data (LZW min code size = 8)
+        bytes.push(0x08);
+        const indexed = quantizeRgbaFrame(frames[f], width, height, palette);
+        const compressed = lzwEncodeGifFrame(indexed);
+        for (let j = 0; j < compressed.length; j++) {
+          bytes.push(compressed[j]);
+        }
+      }
+
+      // 6. GIF Trailer
+      bytes.push(0x3b);
+      return new Uint8Array(bytes);
+    }
+
+    function cancelGifExport() {
+      if (gifExportController) {
+        gifExportController.abort();
+      }
+    }
+
+    async function exportVideoAsGif() {
+      const activeVid = currentTweetData?.videos?.[activeVideoIndex];
+      if (!activeVid || activeVid.isHlsOnly || !activeVid.resolutions?.length) {
+        showToast("No MP4 source available for GIF export", true);
+        return;
+      }
+      if (gifExportController) {
+        showToast("GIF export already in progress");
+        return;
+      }
+
+      const btn = document.getElementById('exportGifBtn');
+      const box = document.getElementById('gifExportProgressBox');
+      const label = document.getElementById('gifExportLabel');
+      const bar = document.getElementById('gifExportBar');
+
+      gifExportController = new AbortController();
+      const { signal } = gifExportController;
+
+      btn.disabled = true;
+      btn.classList.add('opacity-70', 'cursor-wait');
+      box.classList.remove('hidden');
+      bar.style.width = "5%";
+      label.textContent = "Fetching MP4 frames source...";
+
+      // Prefer a compact variant (<= 720px wide) for fast mobile GIF encoding
+      const candidates = [...activeVid.resolutions];
+      const preferred = candidates.find(r => Math.min(r.width, r.height) >= 480) || candidates[0];
+
+      let videoBlobUrl = "";
+      let offscreenVideo = null;
+
+      try {
+        const res = await fetch(preferred.url, { signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const mp4Blob = await res.blob();
+        if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+
+        videoBlobUrl = URL.createObjectURL(mp4Blob);
+        offscreenVideo = document.createElement('video');
+        offscreenVideo.muted = true;
+        offscreenVideo.playsInline = true;
+        offscreenVideo.preload = 'auto';
+        offscreenVideo.src = videoBlobUrl;
+
+        await new Promise((resolve, reject) => {
+          const onAbort = () => reject(new DOMException('Aborted', 'AbortError'));
+          signal.addEventListener('abort', onAbort, { once: true });
+          offscreenVideo.onloadeddata = () => {
+            signal.removeEventListener('abort', onAbort);
+            resolve();
+          };
+          offscreenVideo.onerror = () => {
+            signal.removeEventListener('abort', onAbort);
+            reject(new Error("Video decode error"));
+          };
+        });
+
+        const srcW = offscreenVideo.videoWidth || preferred.width || 360;
+        const srcH = offscreenVideo.videoHeight || preferred.height || 360;
+        const targetW = Math.max(64, Math.min(380, srcW) & ~1);
+        const targetH = Math.max(64, Math.round((srcH * targetW) / srcW) & ~1);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        const fps = 10;
+        const duration = Math.min(15, Number.isFinite(offscreenVideo.duration) && offscreenVideo.duration > 0
+          ? offscreenVideo.duration
+          : (activeVid.duration || 4));
+        const totalFrames = Math.max(2, Math.min(150, Math.floor(duration * fps)));
+        const frames = [];
+
+        for (let i = 0; i < totalFrames; i++) {
+          if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+          const seekTime = Math.min(duration - 0.02, i / fps);
+
+          await new Promise((resolve) => {
+            let done = false;
+            const finish = () => {
+              if (!done) {
+                done = true;
+                resolve();
+              }
+            };
+            const t = setTimeout(finish, 1500);
+            offscreenVideo.onseeked = () => {
+              clearTimeout(t);
+              finish();
+            };
+            offscreenVideo.currentTime = Math.max(0, seekTime);
+          });
+
+          if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+          ctx.drawImage(offscreenVideo, 0, 0, targetW, targetH);
+          frames.push(ctx.getImageData(0, 0, targetW, targetH).data);
+
+          const pct = Math.round(((i + 1) / totalFrames) * 80);
+          bar.style.width = `${pct}%`;
+          label.textContent = `Capturing frame ${i + 1} / ${totalFrames}...`;
+          await new Promise(r => setTimeout(r, 0));
+        }
+
+        label.textContent = "Encoding GIF89a palette & LZW...";
+        bar.style.width = "92%";
+        await new Promise(r => setTimeout(r, 0));
+        if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+
+        const gifBytes = encodeGif89a({
+          width: targetW,
+          height: targetH,
+          frames,
+          delayCs: Math.round(100 / fps)
+        });
+
+        const gifBlob = new Blob([gifBytes], { type: 'image/gif' });
+        const gifUrl = URL.createObjectURL(gifBlob);
+        const filename = buildMediaFilename({
+          handle: currentTweetData.authorHandle,
+          id: currentTweetData.id,
+          index: activeVideoIndex,
+          totalCount: currentTweetData.videos.length,
+          resLabel: `${targetW}x${targetH}`,
+          ext: 'gif'
+        });
+
+        const a = document.createElement('a');
+        a.href = gifUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(gifUrl), 60000);
+
+        bar.style.width = "100%";
+        label.textContent = "GIF saved!";
+        showToast(`Exported ${filename}`);
+      } catch (err) {
+        if (err && err.name === 'AbortError') {
+          showToast("GIF export cancelled", true);
+        } else {
+          console.warn("GIF export failed:", err);
+          showToast("Could not capture frames (CORS or decode error) — use MP4 download instead", true);
+        }
+      } finally {
+        if (offscreenVideo) {
+          offscreenVideo.pause();
+          offscreenVideo.removeAttribute('src');
+          offscreenVideo.load();
+        }
+        if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl);
+        gifExportController = null;
+        btn.disabled = false;
+        btn.classList.remove('opacity-70', 'cursor-wait');
+        setTimeout(() => {
+          box.classList.add('hidden');
+          bar.style.width = "0%";
+        }, 700);
+      }
+    }
+
+    /* =========================================================================
+     * LOCAL STORAGE HISTORY (v3, 25 ITEMS, MIGRATION, SEARCH, THUMBNAILS)
+     * ========================================================================= */
+    function migrateLegacyHistory() {
+      try {
+        if (safeStorageGet(STORAGE_KEY_HISTORY)) return;
+        const legacyRaw = safeStorageGet(LEGACY_STORAGE_KEY_HISTORY);
+        if (!legacyRaw) return;
+        const legacyParsed = JSON.parse(legacyRaw);
+        if (Array.isArray(legacyParsed) && legacyParsed.length > 0) {
+          const migrated = legacyParsed.slice(0, MAX_HISTORY_ITEMS).map(item => ({
+            ...item,
+            mediaKind: item.mediaKind || ((item.videos?.length || 0) > 0 ? 'video' : 'photos'),
+            photos: Array.isArray(item.photos) ? item.photos : []
+          }));
+          safeStorageSet(STORAGE_KEY_HISTORY, JSON.stringify(migrated));
+        }
+      } catch {
+        // Ignore migration error
+      }
+    }
+
     function getHistory() {
       try {
         const raw = safeStorageGet(STORAGE_KEY_HISTORY);
@@ -1685,6 +3622,7 @@
     }
 
     function saveToHistory(tweetData) {
+      if (!tweetData || tweetData.isSampleFallback) return;
       try {
         let list = getHistory().filter(item => item && item.id !== tweetData.id);
         list.unshift({
@@ -1694,14 +3632,29 @@
           avatar: tweetData.avatar,
           text: tweetData.text,
           isQuoted: Boolean(tweetData.isQuoted),
-          videos: tweetData.videos,
+          mediaKind: tweetData.mediaKind || ((tweetData.videos?.length || 0) > 0 ? 'video' : 'photos'),
+          videos: tweetData.videos || [],
+          photos: tweetData.photos || [],
           timestamp: Date.now()
         });
-        if (list.length > 6) list = list.slice(0, 6);
+        if (list.length > MAX_HISTORY_ITEMS) list = list.slice(0, MAX_HISTORY_ITEMS);
         safeStorageSet(STORAGE_KEY_HISTORY, JSON.stringify(list));
         renderHistory();
       } catch (e) {
         console.warn("Could not save history:", e);
+      }
+    }
+
+    function persistHistoryExactSizes(tweetId, videos) {
+      if (!tweetId || !Array.isArray(videos)) return;
+      try {
+        const list = getHistory();
+        const idx = list.findIndex(item => item && item.id === tweetId);
+        if (idx === -1) return;
+        list[idx].videos = videos;
+        safeStorageSet(STORAGE_KEY_HISTORY, JSON.stringify(list));
+      } catch {
+        // Ignore storage errors
       }
     }
 
@@ -1716,6 +3669,9 @@
       const list = getHistory();
       const section = document.getElementById('historySection');
       const container = document.getElementById('historyList');
+      const countBadge = document.getElementById('historyCountBadge');
+      const searchWrap = document.getElementById('historySearchWrap');
+      const searchInput = document.getElementById('historySearchInput');
 
       if (!list.length) {
         section.classList.add('hidden');
@@ -1723,16 +3679,43 @@
         return;
       }
 
+      countBadge.textContent = String(list.length);
+      if (list.length > 4) {
+        searchWrap.classList.remove('hidden');
+      } else {
+        searchWrap.classList.add('hidden');
+        if (searchInput.value) searchInput.value = '';
+      }
+
+      const query = (searchInput.value || '').trim().toLowerCase();
+      const filtered = query
+        ? list.filter(item =>
+            (item.authorHandle || '').toLowerCase().includes(query) ||
+            (item.authorName || '').toLowerCase().includes(query) ||
+            (item.text || '').toLowerCase().includes(query) ||
+            String(item.id || '').includes(query)
+          )
+        : list;
+
       container.textContent = '';
 
-      list.forEach(item => {
+      if (filtered.length === 0) {
+        const emptyMsg = document.createElement('p');
+        emptyMsg.className = "col-span-full text-center text-xs text-gray-400 py-3";
+        emptyMsg.textContent = "No history items match your filter.";
+        container.appendChild(emptyMsg);
+        section.classList.remove('hidden');
+        return;
+      }
+
+      filtered.forEach(item => {
         const cardWrapper = document.createElement('div');
         cardWrapper.className = "flex items-center justify-between gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-xdark border border-gray-200/80 dark:border-xborder hover:border-xblue dark:hover:border-xblue transition group";
 
         // Main semantic button to re-open a saved extraction
         const openBtn = document.createElement('button');
         openBtn.type = "button";
-        openBtn.className = "flex-1 flex items-center justify-between min-w-0 text-left rounded-lg p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue";
+        openBtn.className = "flex-1 flex items-center justify-between min-w-0 text-left rounded-lg p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-xblue gap-2";
         openBtn.onclick = () => {
           activeRequestId++;
           if (activeFetchController) {
@@ -1743,6 +3726,10 @@
           stopInlineVideo();
           currentTweetData = item;
           activeVideoIndex = 0;
+          const handlePart = sanitizeFilenamePart(item.authorHandle, 'i');
+          const linkStr = `https://x.com/${handlePart}/status/${item.id}`;
+          document.getElementById('urlInput').value = linkStr;
+          handleUrlInputChange(linkStr);
           document.getElementById('inputSection').classList.add('hidden');
           document.getElementById('loadingSection').classList.add('hidden');
           document.getElementById('errorSection').classList.add('hidden');
@@ -1751,32 +3738,75 @@
         };
 
         const infoGroup = document.createElement('div');
-        infoGroup.className = "flex items-center space-x-2.5 min-w-0 pr-2";
+        infoGroup.className = "flex items-center space-x-2.5 min-w-0";
 
+        // Thumbnail box (prefers video thumb / photo preview -> avatar -> fallback)
+        const thumbBox = document.createElement('div');
+        thumbBox.className = "relative w-10 h-10 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 shrink-0";
+
+        const mediaThumb = item.videos?.[0]?.thumb || item.photos?.[0]?.previewUrl || item.avatar;
         const img = document.createElement('img');
-        img.src = isSafeHttpsUrl(item.avatar) ? item.avatar : DEFAULT_AVATAR_URL;
+        img.src = isSafeHttpsUrl(mediaThumb) ? mediaThumb : DEFAULT_AVATAR_URL;
         img.alt = "";
-        img.className = "w-8 h-8 rounded-full object-cover bg-gray-200 dark:bg-gray-700 shrink-0";
+        img.className = "w-full h-full object-cover";
         img.onerror = () => {
           if (img.src !== DEFAULT_AVATAR_URL) img.src = DEFAULT_AVATAR_URL;
         };
+        thumbBox.appendChild(img);
+
+        // Mini type overlay badge
+        let miniType = '';
+        if (item.mediaKind === 'photos' || ((item.videos?.length || 0) === 0 && (item.photos?.length || 0) > 0)) {
+          miniType = item.photos.length > 1 ? `${item.photos.length}P` : 'IMG';
+        } else if (item.videos?.[0]?.isHlsOnly) {
+          miniType = 'HLS';
+        } else if (item.videos?.[0]?.type === 'gif') {
+          miniType = 'GIF';
+        } else if ((item.videos?.length || 0) > 1) {
+          miniType = `${item.videos.length}×`;
+        }
+        if (miniType) {
+          const typeTag = document.createElement('span');
+          typeTag.className = "absolute bottom-0 right-0 px-1 py-px bg-black/75 text-white text-[8px] font-bold leading-none rounded-tl";
+          typeTag.textContent = miniType;
+          thumbBox.appendChild(typeTag);
+        }
 
         const textWrap = document.createElement('div');
         textWrap.className = "min-w-0";
 
+        const topRow = document.createElement('div');
+        topRow.className = "flex items-center space-x-1.5";
+
         const handleEl = document.createElement('p');
         handleEl.className = "text-xs font-bold text-gray-800 dark:text-gray-200 truncate group-hover:text-xblue transition";
         handleEl.textContent = `@${item.authorHandle || 'user'}`;
+        topRow.appendChild(handleEl);
+
+        const relTime = formatRelativeTime(item.timestamp);
+        if (relTime) {
+          const timeEl = document.createElement('span');
+          timeEl.className = "text-[10px] text-gray-400 shrink-0";
+          timeEl.textContent = `· ${relTime}`;
+          topRow.appendChild(timeEl);
+        }
 
         const snippetEl = document.createElement('p');
         snippetEl.className = "text-[11px] text-gray-500 dark:text-gray-400 truncate";
-        snippetEl.textContent = item.text || 'Video Tweet';
+        snippetEl.textContent = item.text || 'Media Post';
 
-        textWrap.append(handleEl, snippetEl);
-        infoGroup.append(img, textWrap);
+        textWrap.append(topRow, snippetEl);
+        infoGroup.append(thumbBox, textWrap);
 
-        const bestRes = item.videos?.[0]?.resolutions?.slice(-1)[0];
-        const resLabel = bestRes ? `${bestRes.width}×${bestRes.height}` : 'MP4';
+        let resLabel = 'MP4';
+        if (item.mediaKind === 'photos' || ((item.videos?.length || 0) === 0 && (item.photos?.length || 0) > 0)) {
+          resLabel = `${item.photos.length} Photo${item.photos.length === 1 ? '' : 's'}`;
+        } else if (item.videos?.[0]?.isHlsOnly) {
+          resLabel = 'HLS';
+        } else {
+          const bestRes = item.videos?.[0]?.resolutions?.slice(-1)[0];
+          if (bestRes) resLabel = `${bestRes.width}×${bestRes.height}`;
+        }
 
         const resBadge = document.createElement('span');
         resBadge.className = "text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-xblue shrink-0";
@@ -1813,9 +3843,44 @@
     /* =========================================================================
      * NAVIGATION & ERROR HELPERS
      * ========================================================================= */
-    function showErrorNotice(title, message) {
-      document.getElementById('errorTitle').textContent = title;
-      document.getElementById('errorMessage').textContent = message;
+    function showErrorNotice(kindOrTitle, customMessage) {
+      const presets = {
+        network: {
+          title: "Connection Failed",
+          message: "Could not reach media extraction servers (timeout or offline). Check your connection and tap Retry.",
+          icon: "fa-solid fa-wifi text-xl"
+        },
+        rate_limit: {
+          title: "API Rate Limited",
+          message: "Media extraction endpoints are temporarily rate-limiting requests. Wait a few seconds and tap Retry.",
+          icon: "fa-solid fa-clock text-xl"
+        },
+        private_or_age: {
+          title: "Private or Age-Restricted Post",
+          message: "This post cannot be accessed publicly because the account is protected or age-restricted.",
+          icon: "fa-solid fa-lock text-xl"
+        },
+        not_found: {
+          title: "Post Not Found or Deleted",
+          message: "This post may have been deleted, suspended, or the Tweet ID may be incorrect.",
+          icon: "fa-solid fa-circle-xmark text-xl"
+        },
+        no_media: {
+          title: "No Media Found",
+          message: "This post appears to be text-only—no playable videos, GIFs, or photos were attached (including any quoted post).",
+          icon: "fa-solid fa-photo-film text-xl"
+        },
+        tco: {
+          title: "Shortened t.co Link Detected",
+          message: "t.co short links hide the Tweet ID. Open the link in your browser first, copy the full x.com/.../status/... URL, and paste it here.",
+          icon: "fa-solid fa-link text-xl"
+        }
+      };
+
+      const preset = presets[kindOrTitle];
+      document.getElementById('errorTitle').textContent = preset ? preset.title : kindOrTitle;
+      document.getElementById('errorMessage').textContent = preset ? preset.message : (customMessage || "");
+      document.getElementById('errorIcon').className = preset ? preset.icon : "fa-solid fa-triangle-exclamation text-xl";
       document.getElementById('errorSection').classList.remove('hidden');
     }
 
@@ -1827,6 +3892,7 @@
       }
       abortSizeProbes();
       abortAllDownloads();
+      cancelGifExport();
       stopInlineVideo();
       setMobileMenuOpen(false);
       document.getElementById('resultSection').classList.add('hidden');
