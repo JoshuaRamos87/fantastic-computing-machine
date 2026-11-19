@@ -1,4 +1,4 @@
-const CACHE_NAME = 'x-downloader-pwa-v4';
+const CACHE_NAME = 'x-downloader-pwa-v5';
 const APP_SHELL_ASSETS = [
   './',
   './index.html',

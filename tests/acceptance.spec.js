@@ -615,13 +615,15 @@ test.describe('Streamed downloads, cancellation & GIF export', () => {
     const gifBytes = fs.readFileSync(await gifDownload.path());
     expect(gifBytes.subarray(0, 6).toString('ascii')).toBe('GIF89a');
 
-    // Export trimmed video clip via MediaRecorder
+    // Export lossless trimmed MP4 clip (strictly smaller than original, valid ftyp MP4 container)
     const clipDownloadPromise = appPage.waitForEvent('download');
     await appPage.click('#exportTrimBtn');
     const clipDownload = await clipDownloadPromise;
-    expect(clipDownload.suggestedFilename()).toMatch(/_trim_0_2s-0_7s\.(mp4|webm)$/);
-    const clipStat = fs.statSync(await clipDownload.path());
-    expect(clipStat.size).toBeGreaterThan(0);
+    expect(clipDownload.suggestedFilename()).toMatch(/_trim_0s-0_7s\.mp4$/);
+    const clipBytes = fs.readFileSync(await clipDownload.path());
+    expect(clipBytes.subarray(4, 8).toString('ascii')).toBe('ftyp');
+    expect(clipBytes.length).toBeGreaterThan(0);
+    expect(clipBytes.length).toBeLessThan(TINY_MP4.length);
 
     // Reset restores full range
     await appPage.click('#trimResetBtn');

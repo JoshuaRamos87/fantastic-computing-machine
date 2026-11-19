@@ -570,6 +570,9 @@
                 <i class="fa-solid fa-scissors text-[11px]" aria-hidden="true"></i>
                 <span id="exportTrimBtnLabel">Save Trimmed Clip</span>
               </button>
+              <p class="text-[10px] text-gray-400 text-center leading-snug">
+                Lossless MP4 cut (instant · original quality · proportional size)
+              </p>
 
               <div id="trimProgressBox" class="hidden bg-white dark:bg-xcard border border-gray-200 dark:border-xborder rounded-lg p-2 space-y-1.5">
                 <div class="flex items-center justify-between text-[11px] text-gray-600 dark:text-gray-300 font-medium">
@@ -3792,6 +3795,628 @@
       }
     }
 
+    function mp4ReadU32(bytes, off) {
+      return ((bytes[off] << 24) | (bytes[off + 1] << 16) | (bytes[off + 2] << 8) | bytes[off + 3]) >>> 0;
+    }
+
+    function mp4ReadI32(bytes, off) {
+      return (bytes[off] << 24) | (bytes[off + 1] << 16) | (bytes[off + 2] << 8) | bytes[off + 3];
+    }
+
+    function mp4ReadU64(bytes, off) {
+      return mp4ReadU32(bytes, off) * 4294967296 + mp4ReadU32(bytes, off + 4);
+    }
+
+    function mp4WriteU32(bytes, off, val) {
+      const u = val >>> 0;
+      bytes[off] = (u >>> 24) & 0xff;
+      bytes[off + 1] = (u >>> 16) & 0xff;
+      bytes[off + 2] = (u >>> 8) & 0xff;
+      bytes[off + 3] = u & 0xff;
+    }
+
+    function mp4WriteU64(bytes, off, val) {
+      const safe = Math.max(0, Math.floor(val));
+      mp4WriteU32(bytes, off, Math.floor(safe / 4294967296));
+      mp4WriteU32(bytes, off + 4, safe >>> 0);
+    }
+
+    function mp4ReadType(bytes, off) {
+      return String.fromCharCode(bytes[off], bytes[off + 1], bytes[off + 2], bytes[off + 3]);
+    }
+
+    function mp4MakeBox(type, payloads) {
+      let payloadLen = 0;
+      for (let i = 0; i < payloads.length; i++) payloadLen += payloads[i].byteLength;
+      const totalLen = 8 + payloadLen;
+      const out = new Uint8Array(totalLen);
+      mp4WriteU32(out, 0, totalLen);
+      for (let i = 0; i < 4; i++) out[4 + i] = type.charCodeAt(i);
+      let pos = 8;
+      for (let i = 0; i < payloads.length; i++) {
+        out.set(payloads[i], pos);
+        pos += payloads[i].byteLength;
+      }
+      return out;
+    }
+
+    function mp4ParseBoxes(bytes, start, end) {
+      const boxes = [];
+      let off = start;
+      while (off + 8 <= end) {
+        let size = mp4ReadU32(bytes, off);
+        const type = mp4ReadType(bytes, off + 4);
+        let hdr = 8;
+        if (size === 1) {
+          if (off + 16 > end) break;
+          size = mp4ReadU64(bytes, off + 8);
+          hdr = 16;
+        } else if (size === 0) {
+          size = end - off;
+        }
+        if (size < hdr || off + size > end) break;
+        boxes.push({ type, start: off, dataStart: off + hdr, end: off + size });
+        off += size;
+      }
+      return boxes;
+    }
+
+    function mp4FindBox(boxes, type) {
+      for (let i = 0; i < boxes.length; i++) {
+        if (boxes[i].type === type) return boxes[i];
+      }
+      return null;
+    }
+
+    /**
+     * Pure-JS lossless ISO-BMFF MP4 trimmer (equivalent to `ffmpeg -c copy -movflags +faststart`).
+     * Cuts video & audio tracks cleanly on keyframe boundaries without re-encoding, producing
+     * a seekable, faststart MP4 whose file size is strictly proportional to the trimmed duration.
+     */
+    function trimMp4Lossless(arrayBuffer, startSec, endSec) {
+      try {
+        const bytes = new Uint8Array(arrayBuffer);
+        const topBoxes = mp4ParseBoxes(bytes, 0, bytes.byteLength);
+        const ftypBox = mp4FindBox(topBoxes, 'ftyp');
+        const moovBox = mp4FindBox(topBoxes, 'moov');
+        if (!ftypBox || !moovBox) return null;
+
+        const moovChildren = mp4ParseBoxes(bytes, moovBox.dataStart, moovBox.end);
+        const mvhdBox = mp4FindBox(moovChildren, 'mvhd');
+        if (!mvhdBox) return null;
+
+        const mvhdVersion = bytes[mvhdBox.dataStart];
+        const movieTimescale = mvhdVersion === 1
+          ? mp4ReadU32(bytes, mvhdBox.dataStart + 20)
+          : mp4ReadU32(bytes, mvhdBox.dataStart + 12);
+        if (!movieTimescale) return null;
+
+        const parsedTracks = [];
+        for (const box of moovChildren) {
+          if (box.type !== 'trak') continue;
+          const trakChildren = mp4ParseBoxes(bytes, box.dataStart, box.end);
+          const tkhdBox = mp4FindBox(trakChildren, 'tkhd');
+          const mdiaBox = mp4FindBox(trakChildren, 'mdia');
+          if (!tkhdBox || !mdiaBox) continue;
+
+          const mdiaChildren = mp4ParseBoxes(bytes, mdiaBox.dataStart, mdiaBox.end);
+          const mdhdBox = mp4FindBox(mdiaChildren, 'mdhd');
+          const hdlrBox = mp4FindBox(mdiaChildren, 'hdlr');
+          const minfBox = mp4FindBox(mdiaChildren, 'minf');
+          if (!mdhdBox || !hdlrBox || !minfBox) continue;
+
+          const handler = mp4ReadType(bytes, hdlrBox.dataStart + 8);
+          if (handler !== 'vide' && handler !== 'soun') continue;
+
+          const mdhdVersion = bytes[mdhdBox.dataStart];
+          const timescale = mdhdVersion === 1
+            ? mp4ReadU32(bytes, mdhdBox.dataStart + 20)
+            : mp4ReadU32(bytes, mdhdBox.dataStart + 12);
+          if (!timescale) continue;
+
+          const minfChildren = mp4ParseBoxes(bytes, minfBox.dataStart, minfBox.end);
+          const stblBox = mp4FindBox(minfChildren, 'stbl');
+          if (!stblBox) continue;
+
+          const stblChildren = mp4ParseBoxes(bytes, stblBox.dataStart, stblBox.end);
+          const stsdBox = mp4FindBox(stblChildren, 'stsd');
+          const sttsBox = mp4FindBox(stblChildren, 'stts');
+          const stscBox = mp4FindBox(stblChildren, 'stsc');
+          const stszBox = mp4FindBox(stblChildren, 'stsz');
+          const stcoBox = mp4FindBox(stblChildren, 'stco');
+          const co64Box = mp4FindBox(stblChildren, 'co64');
+          const stssBox = mp4FindBox(stblChildren, 'stss');
+          const cttsBox = mp4FindBox(stblChildren, 'ctts');
+          if (!stsdBox || !sttsBox || !stscBox || !stszBox || (!stcoBox && !co64Box)) continue;
+
+          // Sample sizes (stsz)
+          const uniformSize = mp4ReadU32(bytes, stszBox.dataStart + 4);
+          const sampleCount = mp4ReadU32(bytes, stszBox.dataStart + 8);
+          if (sampleCount === 0) return null; // Fragmented MP4
+          const sizes = new Uint32Array(sampleCount);
+          if (uniformSize > 0) {
+            sizes.fill(uniformSize);
+          } else {
+            let p = stszBox.dataStart + 12;
+            if (p + sampleCount * 4 > stszBox.end) return null;
+            for (let i = 0; i < sampleCount; i++) {
+              sizes[i] = mp4ReadU32(bytes, p);
+              p += 4;
+            }
+          }
+
+          // Time-to-sample (stts)
+          const sttsEntries = mp4ReadU32(bytes, sttsBox.dataStart + 4);
+          const deltas = new Uint32Array(sampleCount);
+          const dts = new Float64Array(sampleCount);
+          let sIdx = 0;
+          let curDts = 0;
+          let p = sttsBox.dataStart + 8;
+          for (let e = 0; e < sttsEntries && sIdx < sampleCount; e++) {
+            const cnt = mp4ReadU32(bytes, p);
+            const delta = mp4ReadU32(bytes, p + 4);
+            p += 8;
+            for (let k = 0; k < cnt && sIdx < sampleCount; k++) {
+              deltas[sIdx] = delta;
+              dts[sIdx] = curDts;
+              curDts += delta;
+              sIdx++;
+            }
+          }
+          if (sIdx !== sampleCount) return null;
+
+          // Composition time offsets (ctts, optional for B-frames)
+          let cttsVersion = 0;
+          let cttsOffsets = null;
+          if (cttsBox) {
+            cttsVersion = bytes[cttsBox.dataStart];
+            const cttsEntries = mp4ReadU32(bytes, cttsBox.dataStart + 4);
+            cttsOffsets = new Int32Array(sampleCount);
+            let ci = 0;
+            let cp = cttsBox.dataStart + 8;
+            for (let e = 0; e < cttsEntries && ci < sampleCount; e++) {
+              const cnt = mp4ReadU32(bytes, cp);
+              const offVal = cttsVersion === 1 ? mp4ReadI32(bytes, cp + 4) : mp4ReadU32(bytes, cp + 4);
+              cp += 8;
+              for (let k = 0; k < cnt && ci < sampleCount; k++) {
+                cttsOffsets[ci++] = offVal;
+              }
+            }
+          }
+
+          // Sync / keyframes (stss, optional)
+          let syncSamples = null;
+          if (stssBox) {
+            const stssCount = mp4ReadU32(bytes, stssBox.dataStart + 4);
+            syncSamples = new Uint32Array(stssCount);
+            let sp = stssBox.dataStart + 8;
+            for (let i = 0; i < stssCount; i++) {
+              syncSamples[i] = Math.max(0, mp4ReadU32(bytes, sp) - 1);
+              sp += 4;
+            }
+          }
+
+          // Chunk offsets (stco / co64)
+          let chunkOffsets;
+          if (stcoBox) {
+            const cnt = mp4ReadU32(bytes, stcoBox.dataStart + 4);
+            chunkOffsets = new Float64Array(cnt);
+            let op = stcoBox.dataStart + 8;
+            for (let i = 0; i < cnt; i++) {
+              chunkOffsets[i] = mp4ReadU32(bytes, op);
+              op += 4;
+            }
+          } else {
+            const cnt = mp4ReadU32(bytes, co64Box.dataStart + 4);
+            chunkOffsets = new Float64Array(cnt);
+            let op = co64Box.dataStart + 8;
+            for (let i = 0; i < cnt; i++) {
+              chunkOffsets[i] = mp4ReadU64(bytes, op);
+              op += 8;
+            }
+          }
+
+          // Sample-to-chunk (stsc) -> exact byte offset per sample
+          const stscCount = mp4ReadU32(bytes, stscBox.dataStart + 4);
+          const stscEntries = [];
+          let scp = stscBox.dataStart + 8;
+          for (let i = 0; i < stscCount; i++) {
+            stscEntries.push({
+              firstChunk: mp4ReadU32(bytes, scp),
+              samplesPerChunk: mp4ReadU32(bytes, scp + 4),
+              descIndex: mp4ReadU32(bytes, scp + 8),
+            });
+            scp += 12;
+          }
+          if (!stscEntries.length) return null;
+
+          const offsets = new Float64Array(sampleCount);
+          const descIndex = stscEntries[0].descIndex || 1;
+          let sampleCursor = 0;
+          let entryIdx = 0;
+          for (let c = 0; c < chunkOffsets.length && sampleCursor < sampleCount; c++) {
+            const chunkNum = c + 1;
+            while (entryIdx + 1 < stscEntries.length && stscEntries[entryIdx + 1].firstChunk <= chunkNum) {
+              entryIdx++;
+            }
+            const entry = stscEntries[entryIdx];
+            let bytePos = chunkOffsets[c];
+            for (let k = 0; k < entry.samplesPerChunk && sampleCursor < sampleCount; k++) {
+              offsets[sampleCursor] = bytePos;
+              bytePos += sizes[sampleCursor];
+              if (bytePos > bytes.byteLength) return null;
+              sampleCursor++;
+            }
+          }
+          if (sampleCursor !== sampleCount) return null;
+
+          parsedTracks.push({
+            handler,
+            timescale,
+            tkhdBox,
+            mdhdBox,
+            hdlrBox,
+            minfPrefixBoxes: minfChildren.filter(b => b.type !== 'stbl'),
+            stsdBox,
+            sampleCount,
+            sizes,
+            deltas,
+            dts,
+            cttsVersion,
+            cttsOffsets,
+            syncSamples,
+            offsets,
+            descIndex,
+          });
+        }
+
+        if (!parsedTracks.length) return null;
+
+        // Anchor trim window on a clean video keyframe for zero-artifact decoding & exact A/V sync
+        const videoTrack = parsedTracks.find(t => t.handler === 'vide') || parsedTracks[0];
+        const targetStartTs = Math.max(0, startSec) * videoTrack.timescale;
+        const targetEndTs = Math.max(startSec + 0.1, endSec) * videoTrack.timescale;
+
+        let rawStartIdx = 0;
+        while (
+          rawStartIdx + 1 < videoTrack.sampleCount &&
+          videoTrack.dts[rawStartIdx] + videoTrack.deltas[rawStartIdx] <= targetStartTs
+        ) {
+          rawStartIdx++;
+        }
+
+        let videoStartIdx = rawStartIdx;
+        if (videoTrack.syncSamples && videoTrack.syncSamples.length > 0) {
+          let prevKf = videoTrack.syncSamples[0];
+          let nextKf = -1;
+          for (let i = 0; i < videoTrack.syncSamples.length; i++) {
+            const kf = videoTrack.syncSamples[i];
+            if (kf <= rawStartIdx) {
+              prevKf = kf;
+            } else {
+              nextKf = kf;
+              break;
+            }
+          }
+          if (
+            nextKf >= 0 &&
+            (videoTrack.dts[nextKf] - targetStartTs) <= 0.5 * videoTrack.timescale &&
+            videoTrack.dts[nextKf] < targetEndTs - 0.5 * videoTrack.timescale
+          ) {
+            videoStartIdx = nextKf;
+          } else {
+            videoStartIdx = prevKf;
+          }
+        }
+
+        let videoEndIdx = videoStartIdx;
+        for (let i = videoStartIdx; i < videoTrack.sampleCount; i++) {
+          if (videoTrack.dts[i] < targetEndTs) {
+            videoEndIdx = i;
+          } else {
+            break;
+          }
+        }
+
+        const actualStartSec = videoTrack.dts[videoStartIdx] / videoTrack.timescale;
+        const actualEndSec = (videoTrack.dts[videoEndIdx] + videoTrack.deltas[videoEndIdx]) / videoTrack.timescale;
+        const actualDurationSec = Math.max(0.05, actualEndSec - actualStartSec);
+
+        // Slice tracks to [actualStartSec, actualEndSec] and group into ~1s interleaved chunks
+        const allChunks = [];
+        const trimmedTracks = [];
+
+        for (let tIdx = 0; tIdx < parsedTracks.length; tIdx++) {
+          const tr = parsedTracks[tIdx];
+          let firstSample, lastSample;
+          if (tr === videoTrack) {
+            firstSample = videoStartIdx;
+            lastSample = videoEndIdx;
+          } else {
+            const aStartTs = actualStartSec * tr.timescale;
+            const aEndTs = actualEndSec * tr.timescale;
+            firstSample = 0;
+            while (
+              firstSample + 1 < tr.sampleCount &&
+              tr.dts[firstSample] + tr.deltas[firstSample] <= aStartTs
+            ) {
+              firstSample++;
+            }
+            lastSample = firstSample;
+            for (let i = firstSample; i < tr.sampleCount; i++) {
+              if (tr.dts[i] < aEndTs) lastSample = i;
+              else break;
+            }
+          }
+
+          const count = lastSample - firstSample + 1;
+          let trackDurationTs = 0;
+          for (let i = firstSample; i <= lastSample; i++) trackDurationTs += tr.deltas[i];
+
+          const trackChunks = [];
+          let cStart = firstSample;
+          const chunkSpanTs = tr.timescale;
+          while (cStart <= lastSample) {
+            const startTs = tr.dts[cStart];
+            let cEnd = cStart;
+            while (cEnd < lastSample && (tr.dts[cEnd + 1] - startTs) < chunkSpanTs) {
+              cEnd++;
+            }
+            const chunkObj = {
+              trackIdx: tIdx,
+              isVideo: tr.handler === 'vide',
+              timeSec: (startTs - tr.dts[firstSample]) / tr.timescale,
+              firstSample: cStart,
+              lastSample: cEnd,
+              sampleCount: cEnd - cStart + 1,
+              mdatRelativeOffset: 0,
+            };
+            trackChunks.push(chunkObj);
+            allChunks.push(chunkObj);
+            cStart = cEnd + 1;
+          }
+
+          trimmedTracks.push({
+            tr,
+            firstSample,
+            lastSample,
+            count,
+            trackDurationTs,
+            trackDurationSec: trackDurationTs / tr.timescale,
+            trackChunks,
+          });
+        }
+
+        allChunks.sort((a, b) => {
+          if (Math.abs(a.timeSec - b.timeSec) > 0.001) return a.timeSec - b.timeSec;
+          return (b.isVideo ? 1 : 0) - (a.isVideo ? 1 : 0);
+        });
+
+        const mdatSlices = [];
+        let mdatPayloadLen = 0;
+        for (const ch of allChunks) {
+          ch.mdatRelativeOffset = mdatPayloadLen;
+          const tr = parsedTracks[ch.trackIdx];
+          let runStart = tr.offsets[ch.firstSample];
+          let runEnd = runStart + tr.sizes[ch.firstSample];
+          for (let s = ch.firstSample + 1; s <= ch.lastSample; s++) {
+            const sOff = tr.offsets[s];
+            const sEnd = sOff + tr.sizes[s];
+            if (sOff === runEnd) {
+              runEnd = sEnd;
+            } else {
+              mdatSlices.push(bytes.subarray(runStart, runEnd));
+              mdatPayloadLen += (runEnd - runStart);
+              runStart = sOff;
+              runEnd = sEnd;
+            }
+          }
+          mdatSlices.push(bytes.subarray(runStart, runEnd));
+          mdatPayloadLen += (runEnd - runStart);
+        }
+
+        const ftypBytes = bytes.subarray(ftypBox.start, ftypBox.end);
+
+        const buildMoov = (mdatDataStart) => {
+          const mvhdCopy = bytes.slice(mvhdBox.start, mvhdBox.end);
+          const mvhdDataOff = mvhdBox.dataStart - mvhdBox.start;
+          const movieDur = Math.max(1, Math.round(actualDurationSec * movieTimescale));
+          if (bytes[mvhdBox.dataStart] === 1) {
+            mp4WriteU64(mvhdCopy, mvhdDataOff + 24, movieDur);
+          } else {
+            mp4WriteU32(mvhdCopy, mvhdDataOff + 16, movieDur);
+          }
+
+          const moovParts = [mvhdCopy];
+
+          for (const tt of trimmedTracks) {
+            const { tr, firstSample, lastSample, count, trackDurationTs, trackDurationSec, trackChunks } = tt;
+
+            const tkhdCopy = bytes.slice(tr.tkhdBox.start, tr.tkhdBox.end);
+            const tkhdDataOff = tr.tkhdBox.dataStart - tr.tkhdBox.start;
+            const tkhdDur = Math.max(1, Math.round(trackDurationSec * movieTimescale));
+            if (bytes[tr.tkhdBox.dataStart] === 1) {
+              mp4WriteU64(tkhdCopy, tkhdDataOff + 28, tkhdDur);
+            } else {
+              mp4WriteU32(tkhdCopy, tkhdDataOff + 20, tkhdDur);
+            }
+
+            const mdhdCopy = bytes.slice(tr.mdhdBox.start, tr.mdhdBox.end);
+            const mdhdDataOff = tr.mdhdBox.dataStart - tr.mdhdBox.start;
+            if (bytes[tr.mdhdBox.dataStart] === 1) {
+              mp4WriteU64(mdhdCopy, mdhdDataOff + 24, trackDurationTs);
+            } else {
+              mp4WriteU32(mdhdCopy, mdhdDataOff + 16, trackDurationTs);
+            }
+
+            // stts
+            const sttsRuns = [];
+            for (let i = firstSample; i <= lastSample; i++) {
+              const d = tr.deltas[i];
+              if (sttsRuns.length && sttsRuns[sttsRuns.length - 1].delta === d) {
+                sttsRuns[sttsRuns.length - 1].count++;
+              } else {
+                sttsRuns.push({ count: 1, delta: d });
+              }
+            }
+            const sttsBody = new Uint8Array(8 + sttsRuns.length * 8);
+            mp4WriteU32(sttsBody, 4, sttsRuns.length);
+            for (let i = 0; i < sttsRuns.length; i++) {
+              mp4WriteU32(sttsBody, 8 + i * 8, sttsRuns[i].count);
+              mp4WriteU32(sttsBody, 12 + i * 8, sttsRuns[i].delta);
+            }
+            const sttsOut = mp4MakeBox('stts', [sttsBody]);
+
+            // ctts (optional)
+            let cttsOut = null;
+            let firstPtsOffset = 0;
+            if (tr.cttsOffsets) {
+              const cttsRuns = [];
+              let minPts = Infinity;
+              let relDts = 0;
+              const checkLimit = Math.min(lastSample, firstSample + 16);
+              for (let i = firstSample; i <= lastSample; i++) {
+                const o = tr.cttsOffsets[i];
+                if (i <= checkLimit) {
+                  const pts = relDts + o;
+                  if (pts < minPts) minPts = pts;
+                  relDts += tr.deltas[i];
+                }
+                if (cttsRuns.length && cttsRuns[cttsRuns.length - 1].offset === o) {
+                  cttsRuns[cttsRuns.length - 1].count++;
+                } else {
+                  cttsRuns.push({ count: 1, offset: o });
+                }
+              }
+              if (Number.isFinite(minPts) && minPts > 0) {
+                firstPtsOffset = minPts;
+              }
+              const cttsBody = new Uint8Array(8 + cttsRuns.length * 8);
+              cttsBody[0] = tr.cttsVersion;
+              mp4WriteU32(cttsBody, 4, cttsRuns.length);
+              for (let i = 0; i < cttsRuns.length; i++) {
+                mp4WriteU32(cttsBody, 8 + i * 8, cttsRuns[i].count);
+                mp4WriteU32(cttsBody, 12 + i * 8, tr.cttsVersion === 1 ? (cttsRuns[i].offset | 0) : cttsRuns[i].offset);
+              }
+              cttsOut = mp4MakeBox('ctts', [cttsBody]);
+            }
+
+            // stss (optional)
+            let stssOut = null;
+            if (tr.syncSamples) {
+              const keptSync = [];
+              for (let i = 0; i < tr.syncSamples.length; i++) {
+                const s = tr.syncSamples[i];
+                if (s >= firstSample && s <= lastSample) {
+                  keptSync.push(s - firstSample + 1);
+                }
+              }
+              if (keptSync.length === 0 || keptSync[0] !== 1) keptSync.unshift(1);
+              const stssBody = new Uint8Array(8 + keptSync.length * 4);
+              mp4WriteU32(stssBody, 4, keptSync.length);
+              for (let i = 0; i < keptSync.length; i++) {
+                mp4WriteU32(stssBody, 8 + i * 4, keptSync[i]);
+              }
+              stssOut = mp4MakeBox('stss', [stssBody]);
+            }
+
+            // stsc
+            const stscRuns = [];
+            for (let i = 0; i < trackChunks.length; i++) {
+              const spc = trackChunks[i].sampleCount;
+              if (!stscRuns.length || stscRuns[stscRuns.length - 1].samplesPerChunk !== spc) {
+                stscRuns.push({ firstChunk: i + 1, samplesPerChunk: spc, descIndex: tr.descIndex });
+              }
+            }
+            const stscBody = new Uint8Array(8 + stscRuns.length * 12);
+            mp4WriteU32(stscBody, 4, stscRuns.length);
+            for (let i = 0; i < stscRuns.length; i++) {
+              mp4WriteU32(stscBody, 8 + i * 12, stscRuns[i].firstChunk);
+              mp4WriteU32(stscBody, 12 + i * 12, stscRuns[i].samplesPerChunk);
+              mp4WriteU32(stscBody, 16 + i * 12, stscRuns[i].descIndex);
+            }
+            const stscOut = mp4MakeBox('stsc', [stscBody]);
+
+            // stsz
+            const stszBody = new Uint8Array(12 + count * 4);
+            mp4WriteU32(stszBody, 4, 0);
+            mp4WriteU32(stszBody, 8, count);
+            for (let i = 0; i < count; i++) {
+              mp4WriteU32(stszBody, 12 + i * 4, tr.sizes[firstSample + i]);
+            }
+            const stszOut = mp4MakeBox('stsz', [stszBody]);
+
+            // stco
+            const stcoBody = new Uint8Array(8 + trackChunks.length * 4);
+            mp4WriteU32(stcoBody, 4, trackChunks.length);
+            for (let i = 0; i < trackChunks.length; i++) {
+              mp4WriteU32(stcoBody, 8 + i * 4, mdatDataStart + trackChunks[i].mdatRelativeOffset);
+            }
+            const stcoOut = mp4MakeBox('stco', [stcoBody]);
+
+            const stblParts = [bytes.subarray(tr.stsdBox.start, tr.stsdBox.end), sttsOut];
+            if (stssOut) stblParts.push(stssOut);
+            if (cttsOut) stblParts.push(cttsOut);
+            stblParts.push(stscOut, stszOut, stcoOut);
+
+            const minfParts = tr.minfPrefixBoxes.map(b => bytes.subarray(b.start, b.end));
+            minfParts.push(mp4MakeBox('stbl', stblParts));
+
+            const mdiaOut = mp4MakeBox('mdia', [
+              mdhdCopy,
+              bytes.subarray(tr.hdlrBox.start, tr.hdlrBox.end),
+              mp4MakeBox('minf', minfParts),
+            ]);
+
+            const trakParts = [tkhdCopy];
+            if (firstPtsOffset > 0) {
+              const elstBody = new Uint8Array(20);
+              mp4WriteU32(elstBody, 4, 1);
+              mp4WriteU32(elstBody, 8, tkhdDur);
+              mp4WriteU32(elstBody, 12, firstPtsOffset | 0);
+              elstBody[16] = 0;
+              elstBody[17] = 1;
+              trakParts.push(mp4MakeBox('edts', [mp4MakeBox('elst', [elstBody])]));
+            }
+            trakParts.push(mdiaOut);
+            moovParts.push(mp4MakeBox('trak', trakParts));
+          }
+
+          return mp4MakeBox('moov', moovParts);
+        };
+
+        const dummyMoov = buildMoov(0);
+        const mdatHeaderSize = 8;
+        const mdatTotalSize = mdatHeaderSize + mdatPayloadLen;
+        if (ftypBytes.byteLength + dummyMoov.byteLength + mdatTotalSize > 0xffffffff) {
+          return null;
+        }
+        const mdatDataStart = ftypBytes.byteLength + dummyMoov.byteLength + mdatHeaderSize;
+        const finalMoov = buildMoov(mdatDataStart);
+        if (finalMoov.byteLength !== dummyMoov.byteLength) return null;
+
+        const mdatHeader = new Uint8Array(8);
+        mp4WriteU32(mdatHeader, 0, mdatTotalSize);
+        mdatHeader[4] = 0x6d; mdatHeader[5] = 0x64; mdatHeader[6] = 0x61; mdatHeader[7] = 0x74;
+
+        const blob = new Blob([ftypBytes, finalMoov, mdatHeader, ...mdatSlices], {
+          type: 'application/octet-stream'
+        });
+
+        return {
+          blob,
+          actualStartSec,
+          actualEndSec,
+          durationSec: actualDurationSec,
+          originalBytes: bytes.byteLength,
+          trimmedBytes: ftypBytes.byteLength + finalMoov.byteLength + mdatTotalSize,
+        };
+      } catch (err) {
+        console.warn("Lossless MP4 trim failed:", err);
+        return null;
+      }
+    }
+
     async function exportTrimmedVideo() {
       const activeVid = currentTweetData?.videos?.[activeVideoIndex];
       if (!activeVid || activeVid.isHlsOnly || !activeVid.resolutions?.length) {
@@ -3800,10 +4425,6 @@
       }
       if (trimExportController) {
         showToast("Trim export already in progress");
-        return;
-      }
-      if (typeof MediaRecorder === 'undefined') {
-        showToast("Your browser does not support client-side video trimming", true);
         return;
       }
 
@@ -3818,10 +4439,9 @@
       btn.disabled = true;
       btn.classList.add('opacity-70', 'cursor-wait');
       box.classList.remove('hidden');
-      bar.style.width = "6%";
-      label.textContent = "Fetching video for trimming...";
+      bar.style.width = "4%";
+      label.textContent = "Fetching source MP4...";
 
-      // Use highest resolution for crisp trimmed clips
       const highestRes = activeVid.resolutions[activeVid.resolutions.length - 1];
       let videoBlobUrl = "";
       let offscreenVideo = null;
@@ -3832,9 +4452,78 @@
       try {
         const res = await fetch(highestRes.url, { ...MEDIA_FETCH_OPTIONS, signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const mp4Blob = await res.blob();
+
+        const totalBytes = parseInt(res.headers.get('content-length') || '0', 10) || highestRes.exactBytes || 0;
+        let mp4Buffer;
+
+        if (res.body && typeof res.body.getReader === 'function') {
+          const reader = res.body.getReader();
+          const fetchChunks = [];
+          let received = 0;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+            fetchChunks.push(value);
+            received += value.byteLength;
+            if (totalBytes > 0) {
+              const pct = Math.min(82, Math.round(4 + (received / totalBytes) * 78));
+              bar.style.width = `${pct}%`;
+              label.textContent = `Fetching MP4... ${formatFileSize(received)} / ${formatFileSize(totalBytes)}`;
+            } else {
+              label.textContent = `Fetching MP4... ${formatFileSize(received)}`;
+            }
+          }
+          mp4Buffer = await new Blob(fetchChunks).arrayBuffer();
+        } else {
+          mp4Buffer = await res.arrayBuffer();
+        }
+
         if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
 
+        const estTotalDur = trimState.duration || activeVid.duration || 5;
+        const reqStartSec = Math.max(0, Math.min(trimState.start, Math.max(0, estTotalDur - 0.1)));
+        const reqEndSec = Math.max(reqStartSec + 0.1, Math.min(trimState.end > 0 ? trimState.end : estTotalDur, estTotalDur));
+
+        // Primary path: Instant lossless ISO-BMFF MP4 trim (original quality, proportional file size, fully seekable)
+        bar.style.width = "88%";
+        label.textContent = "Trimming MP4 (lossless)...";
+        await new Promise(r => setTimeout(r, 0));
+
+        const lossless = trimMp4Lossless(mp4Buffer, reqStartSec, reqEndSec);
+        if (lossless && lossless.blob && lossless.trimmedBytes > 0) {
+          const trimTag = `${highestRes.width}x${highestRes.height}_trim_${formatTrimFilenameSec(lossless.actualStartSec)}-${formatTrimFilenameSec(lossless.actualEndSec)}`;
+          const filename = buildMediaFilename({
+            handle: currentTweetData.authorHandle,
+            id: currentTweetData.id,
+            index: activeVideoIndex,
+            totalCount: currentTweetData.videos.length,
+            resLabel: trimTag,
+            ext: 'mp4'
+          });
+
+          const outUrl = URL.createObjectURL(lossless.blob);
+          const a = document.createElement('a');
+          a.href = outUrl;
+          a.download = filename;
+          a.rel = 'noopener noreferrer';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(outUrl), 60000);
+
+          bar.style.width = "100%";
+          label.textContent = `Trimmed MP4 saved (${formatFileSize(lossless.trimmedBytes)})`;
+          showToast(`Saved ${filename} (${formatFileSize(lossless.trimmedBytes)} · ${lossless.durationSec.toFixed(1)}s)`);
+          return;
+        }
+
+        // Fallback path for fragmented / non-standard containers only: bitrate-capped MediaRecorder
+        if (typeof MediaRecorder === 'undefined') {
+          throw new Error("Unsupported MP4 container for client-side trimming");
+        }
+
+        const mp4Blob = new Blob([mp4Buffer], { type: 'video/mp4' });
         videoBlobUrl = URL.createObjectURL(mp4Blob);
         offscreenVideo = document.createElement('video');
         offscreenVideo.playsInline = true;
@@ -3856,12 +4545,11 @@
 
         const totalDur = Number.isFinite(offscreenVideo.duration) && offscreenVideo.duration > 0
           ? offscreenVideo.duration
-          : (trimState.duration || activeVid.duration || 5);
+          : estTotalDur;
         const startSec = Math.max(0, Math.min(trimState.start, Math.max(0, totalDur - 0.1)));
         const endSec = Math.max(startSec + 0.1, Math.min(trimState.end > 0 ? trimState.end : totalDur, totalDur));
         const clipDuration = endSec - startSec;
 
-        // Seek to exact start point before recording
         await new Promise((resolve) => {
           let done = false;
           const finish = () => {
@@ -3879,7 +4567,6 @@
         });
         if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
 
-        // Build MediaStream (prefer captureStream, fallback to canvas capture)
         let stream = null;
         if (typeof offscreenVideo.captureStream === 'function') {
           stream = offscreenVideo.captureStream();
@@ -3887,7 +4574,6 @@
           stream = offscreenVideo.mozCaptureStream();
         }
 
-        // Route audio silently through AudioContext when possible so trimming doesn't play aloud
         try {
           const AudioCtx = window.AudioContext || window.webkitAudioContext;
           if (AudioCtx && stream) {
@@ -3895,9 +4581,7 @@
             const srcNode = audioCtx.createMediaElementSource(offscreenVideo);
             const destNode = audioCtx.createMediaStreamDestination();
             srcNode.connect(destNode);
-            const videoTracks = stream.getVideoTracks();
-            const audioTracks = destNode.stream.getAudioTracks();
-            stream = new MediaStream([...videoTracks, ...audioTracks]);
+            stream = new MediaStream([...stream.getVideoTracks(), ...destNode.stream.getAudioTracks()]);
           } else {
             offscreenVideo.muted = true;
           }
@@ -3922,11 +4606,15 @@
         }
 
         const { mimeType, ext } = pickSupportedRecorderMimeType();
-        const chunks = [];
-        recorder = mimeType
-          ? new MediaRecorder(stream, { mimeType })
-          : new MediaRecorder(stream);
+        const srcBitrate = Math.round((mp4Buffer.byteLength * 8) / Math.max(1, totalDur));
+        const recOptions = {
+          videoBitsPerSecond: Math.max(400_000, Math.min(srcBitrate, 5_000_000)),
+          audioBitsPerSecond: 128_000
+        };
+        if (mimeType) recOptions.mimeType = mimeType;
 
+        const chunks = [];
+        recorder = new MediaRecorder(stream, recOptions);
         recorder.ondataavailable = (e) => {
           if (e.data && e.data.size > 0) chunks.push(e.data);
         };
@@ -3936,10 +4624,8 @@
           recorder.onerror = (e) => reject(e.error || new Error("Recorder error"));
         });
 
-        label.textContent = `Recording clip 0.0s / ${clipDuration.toFixed(1)}s...`;
-        bar.style.width = "15%";
+        label.textContent = `Re-encoding clip 0.0s / ${clipDuration.toFixed(1)}s...`;
         recorder.start(200);
-
         await offscreenVideo.play();
 
         await new Promise((resolve, reject) => {
@@ -3969,9 +4655,9 @@
 
           const pollTimer = setInterval(() => {
             const elapsed = Math.max(0, (offscreenVideo.currentTime || startSec) - startSec);
-            const pct = Math.min(95, Math.round(15 + (elapsed / clipDuration) * 80));
+            const pct = Math.min(96, Math.round(85 + (elapsed / clipDuration) * 11));
             bar.style.width = `${pct}%`;
-            label.textContent = `Recording clip ${Math.min(elapsed, clipDuration).toFixed(1)}s / ${clipDuration.toFixed(1)}s...`;
+            label.textContent = `Re-encoding clip ${Math.min(elapsed, clipDuration).toFixed(1)}s / ${clipDuration.toFixed(1)}s...`;
             if ((offscreenVideo.currentTime || 0) >= endSec - 0.03) {
               finish();
             }
@@ -3981,9 +4667,7 @@
         });
 
         offscreenVideo.pause();
-        if (recorder.state !== 'inactive') {
-          recorder.stop();
-        }
+        if (recorder.state !== 'inactive') recorder.stop();
         await stoppedPromise;
         if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
         if (chunks.length === 0) throw new Error("No video data captured");

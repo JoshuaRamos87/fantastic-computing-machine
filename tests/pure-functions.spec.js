@@ -189,4 +189,57 @@ test.describe('Pure helper functions', () => {
     expect(gifInfo.trailer).toBe(0x3b);
     expect(gifInfo.length).toBeGreaterThan(800);
   });
+
+  test('trimMp4Lossless produces a smaller, valid, playable MP4 with accurate duration', async ({ appPage }) => {
+    const { TINY_MP4 } = require('./helpers/test-utils');
+    const b64 = TINY_MP4.toString('base64');
+
+    const result = await appPage.evaluate(async (base64Mp4) => {
+      const bin = atob(base64Mp4);
+      const src = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) src[i] = bin.charCodeAt(i);
+
+      const trimmed = trimMp4Lossless(src.buffer, 0, 0.5);
+      if (!trimmed) return { ok: false };
+
+      const head = new Uint8Array(await trimmed.blob.slice(0, 12).arrayBuffer());
+      const boxType = String.fromCharCode(head[4], head[5], head[6], head[7]);
+
+      // Verify Chromium's native video decoder plays the remuxed MP4 cleanly
+      const blobUrl = URL.createObjectURL(new Blob([trimmed.blob], { type: 'video/mp4' }));
+      const vid = document.createElement('video');
+      vid.muted = true;
+      vid.preload = 'auto';
+      vid.src = blobUrl;
+
+      const meta = await new Promise((resolve) => {
+        vid.onloadedmetadata = () => resolve({
+          loaded: true,
+          duration: vid.duration,
+          videoWidth: vid.videoWidth,
+          videoHeight: vid.videoHeight,
+        });
+        vid.onerror = () => resolve({ loaded: false });
+      });
+      URL.revokeObjectURL(blobUrl);
+
+      return {
+        ok: true,
+        boxType,
+        originalBytes: trimmed.originalBytes,
+        trimmedBytes: trimmed.trimmedBytes,
+        durationSec: trimmed.durationSec,
+        meta,
+      };
+    }, b64);
+
+    expect(result.ok).toBe(true);
+    expect(result.boxType).toBe('ftyp');
+    expect(result.trimmedBytes).toBeLessThan(result.originalBytes);
+    expect(result.meta.loaded).toBe(true);
+    expect(result.meta.videoWidth).toBeGreaterThan(0);
+    expect(result.meta.videoHeight).toBeGreaterThan(0);
+    expect(result.meta.duration).toBeGreaterThan(0.35);
+    expect(result.meta.duration).toBeLessThan(0.65);
+  });
 });
