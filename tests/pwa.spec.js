@@ -125,7 +125,7 @@ test.describe('PWA installability, manifest, service worker & share target', () 
       }
     });
 
-    await setupMockNetwork(appPage, { includeCdnStubs: false });
+    await setupMockNetwork(appPage);
     await gotoApp(appPage);
 
     expect(externalRequests).toEqual([]);

@@ -1,9 +1,8 @@
-const { test, expect, stubExternalCdns, gotoApp } = require('./helpers/test-utils');
+const { test, expect, gotoApp } = require('./helpers/test-utils');
 const { fxSingleVideo, fxHlsOnly, fxPhotoGallery, vxVideoFallback } = require('./fixtures/api-fixtures');
 
 test.describe('Pure helper functions', () => {
   test.beforeEach(async ({ appPage }) => {
-    await stubExternalCdns(appPage);
     await gotoApp(appPage);
   });
 

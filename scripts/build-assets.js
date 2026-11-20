@@ -83,10 +83,10 @@ const iconsCssPath = path.join(ASSETS_DIR, 'icons.css');
 fs.writeFileSync(iconsCssPath, cssRules.join('\n') + '\n', 'utf8');
 
 // 3. Compile minified Tailwind CSS into assets/styles.css
-const tailwindBin = path.join(ROOT, 'node_modules', '.bin', 'tailwindcss');
+const tailwindCli = require.resolve('tailwindcss/lib/cli.js');
 execFileSync(
-  tailwindBin,
-  ['-c', path.join(ROOT, 'tailwind.config.js'), '-i', path.join(ROOT, 'src', 'input.css'), '-o', path.join(ASSETS_DIR, 'styles.css'), '--minify'],
+  process.execPath,
+  [tailwindCli, '-c', path.join(ROOT, 'tailwind.config.js'), '-i', path.join(ROOT, 'src', 'input.css'), '-o', path.join(ASSETS_DIR, 'styles.css'), '--minify'],
   { cwd: ROOT, stdio: 'inherit' }
 );
 

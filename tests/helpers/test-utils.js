@@ -7,84 +7,6 @@ const TINY_MP4 = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'tiny.mp
 const TINY_PNG = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'tiny.png'));
 
 /**
- * Lightweight Tailwind-compatible stub loaded when intercepting external CDNs
- * so tests run deterministically offline with accurate visibility & responsive layout.
- */
-const TAILWIND_STUB_JS = `
-window.tailwind = window.tailwind || {};
-(function () {
-  var style = document.createElement('style');
-  style.id = 'pw-tailwind-stub';
-  style.textContent = [
-    '*, *::before, *::after { box-sizing: border-box; }',
-    'html, body { margin: 0; padding: 0; max-width: 100%; }',
-    '.hidden { display: none !important; }',
-    '.invisible { visibility: hidden !important; }',
-    '.opacity-0 { opacity: 0; }',
-    '.opacity-100 { opacity: 1; }',
-    '.flex { display: flex; }',
-    '.inline-flex { display: inline-flex; }',
-    '.grid { display: grid; }',
-    '.block { display: block; }',
-    '.fixed { position: fixed; }',
-    '.absolute { position: absolute; }',
-    '.relative { position: relative; }',
-    '.sticky { position: sticky; }',
-    '.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }',
-    '.w-full { width: 100%; }',
-    '.min-w-0 { min-width: 0; }',
-    '.max-w-3xl { max-width: 48rem; }',
-    '.max-w-md { max-width: 28rem; }',
-    '.max-w-\\\\[260px\\\\] { max-width: 260px; }',
-    '.max-w-\\\\[92vw\\\\] { max-width: 92vw; }',
-    '.overflow-hidden { overflow: hidden; }',
-    '.overflow-x-auto { overflow-x: auto; }',
-    '.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
-    '.flex-wrap { flex-wrap: wrap; }',
-    '.flex-col { flex-direction: column; }',
-    '.items-center { align-items: center; }',
-    '.justify-between { justify-content: space-between; }',
-    '.justify-center { justify-content: center; }',
-    '.pointer-events-none { pointer-events: none; }',
-    'img, video { max-width: 100%; }',
-    '@media (min-width: 640px) {',
-    '  .sm\\\\:hidden { display: none !important; }',
-    '  .sm\\\\:inline { display: inline !important; }',
-    '  .sm\\\\:inline-flex { display: inline-flex !important; }',
-    '  .sm\\\\:flex-row { flex-direction: row; }',
-    '}',
-    '@media (min-width: 768px) {',
-    '  .md\\\\:flex-row { flex-direction: row; }',
-    '}'
-  ].join('\\n');
-  document.head.appendChild(style);
-})();
-`;
-
-/**
- * Intercepts third-party CDN assets (Tailwind, Google Fonts, Font Awesome)
- * so tests run fast and offline without flaking on external servers.
- */
-async function stubExternalCdns(page) {
-  await page.route('https://cdn.tailwindcss.com/**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/javascript; charset=utf-8',
-      body: TAILWIND_STUB_JS,
-    })
-  );
-  await page.route('https://fonts.googleapis.com/**', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/css', body: '' })
-  );
-  await page.route('https://fonts.gstatic.com/**', (route) =>
-    route.fulfill({ status: 200, contentType: 'font/woff2', body: '' })
-  );
-  await page.route('https://cdnjs.cloudflare.com/**', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/css', body: '' })
-  );
-}
-
-/**
  * Installs default mock routes for Twitter media CDN assets (MP4 + PNG)
  * and customizable FxTwitter / VxTwitter API handlers.
  */
@@ -94,12 +16,7 @@ async function setupMockNetwork(page, options = {}) {
     vxHandler,
     mp4Handler,
     imageHandler,
-    includeCdnStubs = true,
   } = options;
-
-  if (includeCdnStubs) {
-    await stubExternalCdns(page);
-  }
 
   // Mock FxTwitter API
   await page.route('https://api.fxtwitter.com/**', async (route) => {
@@ -231,7 +148,6 @@ module.exports = {
   APP_URL_PATH,
   TINY_MP4,
   TINY_PNG,
-  stubExternalCdns,
   setupMockNetwork,
   gotoApp,
 };

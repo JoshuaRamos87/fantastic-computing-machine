@@ -2,7 +2,7 @@
   "name": "x-video-downloader-tests",
   "version": "1.0.0",
   "private": true,
-  "description": "Playwright acceptance test suite for the single-file Twitter / X Video Downloader app",
+  "description": "Offline-ready Twitter / X Video Downloader PWA and Playwright acceptance test suite",
   "scripts": {
     "build:assets": "node scripts/build-assets.js",
     "test": "playwright test --grep-invert @live",
